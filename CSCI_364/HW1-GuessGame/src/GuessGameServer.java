@@ -1,5 +1,7 @@
 //Sam Dressler
 //Gues Game Server
+//CSCI 364
+//1-18-2020
 
 import java.io.IOException;
 import java.io.BufferedReader;

@@ -1,5 +1,7 @@
 //Sam Dressler
 //Guess Game Client
+//CSCI 364
+//1-18-2020
 
 import java.io.PrintWriter;
 import java.io.BufferedReader;
@@ -51,8 +53,7 @@ public class GuessGameClient {
             System.err.println("Don't know about host " + hostName);
             System.exit(1);
         } catch (IOException e) {
-            System.err.println("Couldn't get I/O for the connection to " +
-                hostName);
+            System.err.println("Couldn't get I/O for the connection to " +hostName);
             System.exit(1);
         } 
     }
