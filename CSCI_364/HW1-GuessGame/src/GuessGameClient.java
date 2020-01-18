@@ -1,8 +1,12 @@
 //Sam Dressler
 //Guess Game Client
 
-import java.io.*;
-import java.net.*;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 public class GuessGameClient {
     public static void main(String[] args) throws IOException {
@@ -27,7 +31,7 @@ public class GuessGameClient {
             String userInput;
             String temp;
             if ((userInput = input.readLine()) != null){
-                System.out.println("Game starting...");
+                System.out.println("Welcome!\n");
                 System.out.println("Server: Guess a number in the range <0 - "+ userInput+">");
             }
             while ((userInput = stdIn.readLine()) != null) {
