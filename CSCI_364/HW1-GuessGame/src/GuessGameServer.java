@@ -77,6 +77,10 @@ public class GuessGameServer {
         catch(IOException e){
             System.out.println("<User client has been closed>");
         }
+        catch(NumberFormatException e){
+            System.out.println("<User must enter a number>\nExiting...");
+            System.exit(0);
+        }
     }
     public boolean getRepeatedPlay(){
         boolean playAgain = false;
