@@ -17,21 +17,32 @@ public class GuessGameClient {
 
         try {
             Socket echoSocket = new Socket(hostName, portNumber);
-
-            PrintWriter out = new PrintWriter(echoSocket.getOutputStream(), true);
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
-
+            //create the print writer that sends the guess values to the server
+            PrintWriter output = new PrintWriter(echoSocket.getOutputStream(), true);
+            //create buffered reader for response from the server
+            BufferedReader input = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
+            //create buffered reader for user input that is sent to server
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
             String userInput;
-            if ((userInput = stdIn.readLine()) != null){
-                System.out.println("Guess a number in the range 0 - "+ userInput);
+            String temp;
+            if ((userInput = input.readLine()) != null){
+                System.out.println("Game starting...");
+                System.out.println("Server: Guess a number in the range <0 - "+ userInput+">");
             }
             while ((userInput = stdIn.readLine()) != null) {
-                out.println(userInput);
-                System.out.println("Server: " + in.readLine());
+                //send the server the user's guess
+                output.println(userInput);
+                //get server's response 
+                temp = input.readLine();
+               //output the server's response from the servers printwriter
+                System.out.println("Server: " + temp);
+                if(temp.contains("Success!")){
+                    System.exit(0);
+                }
             }
+
+            echoSocket.close();
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host " + hostName);
             System.exit(1);

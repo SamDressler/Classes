@@ -21,7 +21,7 @@ public class GuessGameServer {
             System.out.println("The server is listening at: " + 
                     serverSocket.getInetAddress() + " on port " + 
                     serverSocket.getLocalPort());
-
+            System.out.println("Waiting on Client Side...");
             //create a client socket that is listening on the serer socket for a connection to be made
             //and then accepts it
             Socket clientSocket = serverSocket.accept();     
@@ -33,18 +33,41 @@ public class GuessGameServer {
 
             //Send number that the user entered to be the max value for the game
             output.println(maxGuessValue);
-
-            String inputLine;
-            while ((inputLine = input.readLine()) != null)
-            {   
-                System.out.println("I received: " + inputLine);
-                output.println(inputLine.toUpperCase());
+            int randomNumber =0;
+            randomNumber = (int)(Math.random() * maxGuessValue);
+            //System.out.println("Random Number = " + randomNumber);
+            int inputValue =0;
+            int guessCounter = 0;
+            String temp;
+            while ((temp = input.readLine()) != null) {   
+                inputValue = convertGuessToInt(temp);
+                if(inputValue > randomNumber) {
+                    System.out.println("User Guessed: " + inputValue + " -- Too High!");
+                    output.println("Too High! Guess Lower");
+                    guessCounter++;
+                }
+                else if (inputValue < randomNumber) {
+                    System.out.println("User Guessed: " + inputValue + " -- Too Low!");
+                    output.println("Too Low! Guess Higher");
+                    guessCounter++;
+                }
+                else {
+                    guessCounter++;
+                    System.out.println("User Guessed Correct after "+guessCounter+" attempts!");
+                    output.println("Success! you have guessed the number in "+guessCounter+" attempts!");
+                    System.exit(0);
+                }
             }
-
+            serverSocket.close();
         } catch (IOException e) {
             System.out.println("Exception caught when trying to listen on port "
                 + portNumber + " or listening for a connection");
             System.out.println(e.getMessage());
+        }catch(NumberFormatException e){
+            System.out.println("User must enter an integer value!");
         }
+    }
+    private static int convertGuessToInt(String guess) throws NumberFormatException{
+        return Integer.parseInt(guess);
     }
 }
