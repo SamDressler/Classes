@@ -1,133 +1,89 @@
-package src;
-
 //Sam Dressler
 //Gues Game Server
 //CSCI 364
 //1-18-2020
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.io.InputStreamReader;
+//import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
+//import java.util.Scanner;
 public class MoneyHubServer {
+    static ServerSocket server;
+    static Socket client;
+    BufferedReader input;
+    PrintWriter output;
+    static InputStream is;
+    static OutputStream os;
 
-    private ServerSocket serverSocket;
-    private Socket clientSocket;
-    private PrintWriter output;
-    private BufferedReader input;
-    
-    public void setup(int port){
-        try{
-            //create a serverSocket using the port number provided by the user
-            serverSocket = new ServerSocket(port);
-            //display which InetAddress the server is listening on and the local port
-            System.out.println("The server is listening at: " + serverSocket.getInetAddress() + " on port " + 
-                serverSocket.getLocalPort());
-             System.out.println("Waiting on Client Side..."); 
-            //create a client socket that is listening on the serer socket for a connection to be made
-            //and then accepts it
-            clientSocket = serverSocket.accept();   
-            //Create a PrintWriter that writes to the accepted sockets already existing output stream
-            output = new PrintWriter(clientSocket.getOutputStream(), true);  
-            //Create a buffered reader that reads the accepted sockets input stream
-            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-            System.out.println("Game Started...");
-        }
-        catch(IOException e){
-            System.out.println("<Unable to complete Setup>");
-            System.out.println(e.getMessage());
-            System.exit(0);
-        }
-    }
-
-    public void playGame(int value){
-         //Send number that the user entered to be the max value for the game
-        output.println(value);
-        int randomNumber =0;
-        randomNumber = (int)(Math.random() * value);
-       // System.out.println("Random Number = " + randomNumber);
-        int inputValue =0;
-        int guessCounter = 0;
-        String temp;
-        try{
-            while ((temp = input.readLine()) != null) {   
-                inputValue = convertGuessToInt(temp);
-                 if(inputValue > randomNumber) {
-                    System.out.println("User Guessed: " + inputValue + " -- Too High!");
-                    output.println("Too High! Guess Lower");
-                    guessCounter++;
-                }
-                else if (inputValue < randomNumber) {
-                    System.out.println("User Guessed: " + inputValue + " -- Too Low!");
-                    output.println("Too Low! Guess Higher");
-                    guessCounter++;
-                }
-                else {
-                guessCounter++;
-                    System.out.println("User Guessed the number ("+randomNumber+
-                    ") Correctly after ("+guessCounter+") attempts!");
-                    output.println("Success! you have guessed the number in "+guessCounter+" attempts!");
-                    clientSocket.close();
-                    serverSocket.close();
-                }
-            }
-        }
-        catch(IOException e){
-            System.out.println("<User client has been closed>");
-        }
-        catch(NumberFormatException e){
-            System.out.println("<User must enter a number>\nExiting...");
-            System.exit(0);
-        }
-    }
-    public boolean getRepeatedPlay(){
-        boolean playAgain = false;
-        System.out.println("Game Completed, Would you like to play again?\n<Y/N>");
-        Scanner sc = new Scanner(System.in);
-        String response = sc.next();
-        if(response.equalsIgnoreCase("Y")){
-            playAgain = true;
-        }
-        else{
-            sc.close();
-            playAgain = false;
-        }
-        return playAgain;
-    }
-    public static void main(String[] args) throws IOException {
+    public static void main(final String[] args) {
         int port = 0;
-        int maxGuessValue = 0;
-        boolean repeatedPlay = false;
-        //check to see if the server was started with the correct amount of arguments
-        if (args.length != 2) {
-            System.err.println("Usage: java GuessGameServer <port number> <maximum number for game>");
-            System.exit(1);
+        if (args.length == 1) {
+            port = Integer.parseInt(args[0]);
+        } else {
+            System.out.println("Usage: java MoneyHubServer <port>");
+            System.exit(0);
         }
-        port = Integer.parseInt(args[0]);
-        maxGuessValue = Integer.parseInt(args[1]);
-        //create an instance of the GuessGameServe
-        MoneyHubServer server = new MoneyHubServer();
-        //Run the socket setup in a seperate function
-        server.setup(port);
-        do{
-            server.playGame(maxGuessValue);
-        
-            repeatedPlay = server.getRepeatedPlay();
+        System.out.println("Welcome!");
+        try {
+            setup(port);
+            processMessage();
+            client.close();
+            server.close();
+            is.close();
+        } catch (final IOException e) {
+            System.out.println(">>Setup Failed");
+            e.printStackTrace();
+        }
 
-            if(repeatedPlay == true){
-                server.setup(port);
-             }
-            else{
-                System.out.println("Thanks for playing!");
-                System.exit(0);
-            }
-        } while(true);  
+
     }
-    private static int convertGuessToInt(String guess) throws NumberFormatException{
-        return Integer.parseInt(guess);
+
+    public static void setup(final int port) throws IOException {
+        server = new ServerSocket(port);
+        client = server.accept();
+
+        System.out.println("The server is listening at: " + server.getInetAddress() + " on port " + server.getLocalPort());
+
+        is = client.getInputStream();
+        os = client.getOutputStream();
+
+    }
+    public static String processMessage(){
+        try{
+            //get the length of the message being sent and then
+            //the bytes of the message
+            byte[] lenBytes = new byte[4];
+            is.read(lenBytes, 0, 4);
+            int len = (((lenBytes[3] & 0xff) << 24) | ((lenBytes[2] & 0xff) << 16) |
+                      ((lenBytes[1] & 0xff) << 8) | (lenBytes[0] & 0xff));
+            byte[] receivedBytes = new byte[len];
+            is.read(receivedBytes, 0, len);
+            String msgReceived = new String(receivedBytes, 0, len);
+    
+            System.out.println("Server received: " + msgReceived);
+    
+            // Sending message to the client
+            String messageToSend = msgReceived;
+            byte[] toSendBytes = messageToSend.getBytes();
+            int toSendLen = toSendBytes.length;
+            byte[] toSendLenBytes = new byte[4];
+            toSendLenBytes[0] = (byte)(toSendLen & 0xff);
+            toSendLenBytes[1] = (byte)((toSendLen >> 8) & 0xff);
+            toSendLenBytes[2] = (byte)((toSendLen >> 16) & 0xff);
+            toSendLenBytes[3] = (byte)((toSendLen >> 24) & 0xff);
+            os.write(toSendLenBytes);
+            os.write(toSendBytes);
+        }
+        catch(final IOException e) {
+            System.out.println(">>Setup Failed");
+            e.printStackTrace();
+        }
+
+        return "Yes";
     }
 }
