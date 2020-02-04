@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-public class GuessGameClient {
+public class MoneyHubTestClient {
     public static void main(final String[] args) throws IOException {
 
         if (args.length != 2) {
