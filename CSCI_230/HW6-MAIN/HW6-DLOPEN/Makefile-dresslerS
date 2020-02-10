@@ -1,0 +1,14 @@
+#Sam Dressler
+CC = gcc
+CFLAGSO = -fPIC -c
+CFLAGS = -c -Wall
+#          Main              Scan               Load              Search          Free
+OBJECTSO= hw6-dresslerS.o hw6-A-dresslerS.o hw6-B-dresslerS.o hw6-C-dresslerS.o hw6-D-dresslerS.o 
+PACKAGE = hw6-dresslerS.c hw6-A-dresslerS.c hw6-B-dresslerS.c hw6-C-dresslerS.c hw6-D-dresslerS.c
+
+all:
+	$(CC) $(CFLAGSO) $(PACKAGE)
+	$(CC) -shared -o libHW9.so $(OBJECTSO)
+	$(CC) -o hw9 hw9-dresslerS.c -ldl 
+clean: 
+	rm -rf *.so hw6so *.o *.gch hw9

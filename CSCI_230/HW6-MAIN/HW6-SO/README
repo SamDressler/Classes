@@ -1,0 +1,5 @@
+To use:
+make -f Makefile-dresslerS sharedlib
+make -f Makefile-dresslerS run
+./hw6so </SEARCH_WORD\>
+make -f Makefile-dresslerS clean

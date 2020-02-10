@@ -1,0 +1,4 @@
+To use:
+make -f Makefile-dresslerS
+./hw6 <SEARCH_WORD>
+make -f Makefile-dresslerS clean

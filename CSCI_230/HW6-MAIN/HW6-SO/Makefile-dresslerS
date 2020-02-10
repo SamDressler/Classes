@@ -1,0 +1,18 @@
+#Sam DresslerMae
+CC = gcc
+CFLAGSO = -fPIC -c
+CFLAGS = -c -wall
+#          Main              Scan               Load              Search          Free
+OBJECTSO= hw6-dresslerS.o hw6-A-dresslerS.o hw6-B-dresslerS.o hw6-C-dresslerS.o hw6-D-dresslerS.o 
+PACKAGE = hw6-dresslerS.c hw6-A-dresslerS.c hw6-B-dresslerS.c hw6-C-dresslerS.c hw6-D-dresslerS.c
+
+sharedlib:
+	$(CC) $(CFLAGSO) $(PACKAGE)
+	$(CC) -shared -o libHW9.so $(OBJECTSO)
+	
+#./ before myLib.so is needed so program will work. Is reduntant but needed
+run: 
+	$(CC) -o hw6so hw6-dresslerS.o ./libHW9.so
+	
+clean: 
+	rm -rf *.so hw6so *.o *.gch

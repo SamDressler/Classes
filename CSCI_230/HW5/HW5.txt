@@ -1,0 +1,95 @@
+HW-5	CS230	10 points	Due: Monday, 2/18/2019
+
+For this assignment we will write a program that can manage a 
+"little blackbook". I.E. the program will read in a list of 
+names/phone numbers and search for the name specified.
+
+The program will require the following structure:
+
+struct _data {                                 
+   char *name;
+   long number;
+};
+
+The program will require command line arguments:
+
+int main(int argv, char **argc) {
+	
+Where argv is the number of arguments and argc is an array
+holding the arguments (each is a string). Your program must catch 
+any case where no command line arguement was provided and print
+a warning message (see below).
+
+You MUST include/use the following functions, defined as follows:
+
+int SCAN(FILE *(*stream)) - this function will open the file/stream 
+and return an integer indicating how many lines there are. Note that
+I need to pass stream, which is a pointer, by reference. So I am 
+passing this as a pointer to a pointer.
+
+struct _data *LOAD(FILE *stream, int size) - this function will 
+rewind file, create the dynamic array (of size), and read in the 
+data, populating the _data struct dynamic array. Note that stream 
+is passed by value this time. The function then returns the populated 
+array of struct.
+
+void SEARCH(struct _data *BlackBox, char *name, int size) - this 
+function will get the dynamic array of struct passed to it, the name 
+we are looking for, and the size of the array. This function will 
+then search the dynamic array for the name. See below for examples.
+
+void FREE(struct _data *BlackBox, int size) - this function will free 
+up all of the dynamic memory we allocated. Take note of the number 
+of times malloc/calloc were called, as you need to free that same 
+number.
+
+Finally, the data file will be called hw5.data and will beformated 
+as:
+
+ron 7774013
+jon 7774014
+tom 7774015
+won 7774016
+
+HINTS:
+------
+Functions that will make things much easier:
+getline()
+feof()
+strtok()
+atoi()
+
+* Make sure you read the man pages for each. They have some "gotchas".
+
+SAMPLE RUNS:
+------------
+Case 1 - No command line argument provided.
+
+[rmarsh@chef junk]$ ./CS230-5
+*******************************************
+* You must include a name to search for.  *
+*******************************************
+
+Case 2 - Provided name is NOT in the list.
+
+[rmarsh@chef junk]$ ./CS230-5 joe
+*******************************************
+The name was NOT found.
+*******************************************
+
+Case 3 - Provided name is in the list.
+
+[rmarsh@chef junk]$ ./CS230-5 tom
+*******************************************
+The name was found at the 2 entry.
+*******************************************
+
+REQUIREMENTS:
+-------------
+1. Your program must run on Mint in Leonard 110/112.
+
+2. Your full name must appear as a comment at the beginning of each source
+   file (including the header files).
+
+3. Your source code must be named hw5-yourname.c
+

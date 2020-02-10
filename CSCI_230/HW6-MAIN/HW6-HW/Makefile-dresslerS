@@ -1,0 +1,27 @@
+#Sam DresslerMae
+CC = gcc
+CFLAGS = -c -Wall
+#          Main              Scan               Load              Search          Free
+OBJECTS= hw6-dresslerS.o hw6-A-dresslerS.o hw6-B-dresslerS.o hw6-C-dresslerS.o hw6-D-dresslerS.o 
+HEADERS= hw6-dresslerS.c hw6-A-dresslerS.h hw6-B-dresslerS.h hw6-C-dresslerS.h hw6-D-dresslerS.h 
+
+all: $(OBJECTS)
+	$(CC) $(OBJECTS) -o hw6
+
+hw6-dresslerS.o: $(HEADERS)
+	$(CC) $(CFLAGS) hw6-dresslerS.c 
+
+hw6-A-dresslerS.o: hw6-A-dresslerS.c hw6-A-dresslerS.h
+	$(CC) $(CFLAGS) hw6-A-dresslerS.c 
+
+hw6-B-dresslerS.o: hw6-B-dresslerS.c hw6-B-dresslerS.h 
+	$(CC) $(CFLAGS) hw6-B-dresslerS.c
+
+hw6-C-dresslerS.o: hw6-C-dresslerS.c hw6-C-dresslerS.h
+	$(CC) $(CFLAGS) hw6-C-dresslerS.c 
+
+hw6-D-dresslerS.o: hw6-D-dresslerS.c hw6-D-dresslerS.h
+	$(CC) $(CFLAGS) hw6-D-dresslerS.c
+
+clean: 
+	rm -rf *.o hw6
