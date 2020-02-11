@@ -5,7 +5,13 @@ startup_prompt:      	.ascii "\n/-----------------Welcome!----------------\\\n"
 choose_piece_prompt: 	.asciiz "Player 1:\nChoose your piece: (X/O):  "
 invalid_choice_message:	.asciiz "\n---Invalid choice, try again---\n"
 invalid_move_message:	.asciiz "\n---Invalid move, try again---\n"
-select_move_prompt: 	.asciiz "Enter the next move (1-9): " 
+
+p1_select_move_prompt: 	.asciiz "Player 1:\nEnter the next move (1-9): " 
+p2_select_move_prompt: 	.asciiz "Player 2:\nEnter the next move (1-9): " 
+p1_wins:		.asciiz "Player 1 Wins!!!\n"
+p2_wins:		.asciiz "Player 2 Wins!!!\n"
+draw:			.asciiz "The game is a draw!\n"
+
 continue_prompt : 	.asciiz "\nContinue (Y/N): "
 new_game_prompt: 	.asciiz "\nNew game (Y/N): "
 exit_message: 		.asciiz "\nThank you for playing!"
@@ -15,6 +21,7 @@ p2_choice: 		.asciiz "\nPlayer 2 gets : "
 move: 			.byte '*'
 p1_piece: 		.byte '*'
 p2_piece: 		.byte '*'
+cur_piece: 		.byte '*'
 
 true: 			.word 1
 false:			.word 0
@@ -34,7 +41,7 @@ winning_combinations:
 		#diagonal win conditions
 		.ascii "1 5 9"
 		.ascii "7 5 3"
-draw:
+draw_combination:
 		.ascii "1 2 3 4 5 6 7 8 9"
 .text 	
 ##################################################################################################
@@ -43,32 +50,49 @@ main:
  	li $v0, 4		#load register v0 wuh syscall code for printing a string
  	la $a0, startup_prompt  #load the address of the game started prompt into $a0 
 	syscall 		#print out the string
-jump1:		#jump 1: label to jump too if invalid piece is selected
+	
 	jal choose_piece	#prompt the player to choose their piece
 
 validated:	
 	
 	jal print_board		#print out the board with the index
 	
-select_move:
-	
-	li $v0, 4
-	la $a0, select_move_prompt
-	syscall
-
-	li $v0, 5
-	syscall
-	
-	lb $v0, move
-	blt $v0, 49, invalid_move
-	bgt $v0, 57, invalid_move
-	
-	
 jump2:		
 	j continue 
 	
 
 ######### Code the decides what happens 
+#first_move - procedure that deceides which player goes first 
+first_move:
+	li $a1, 2 
+      	li $v0, 42
+     	syscall
+     	beqz $a0, p1_first
+     	
+p1_first: 
+	sb $t0, p1_piece
+	lb $t0, cur_piece
+	
+#select_move prints prompt asking what 
+select_move:
+	
+	li $v0, 4
+	la $a0, p1_select_move_prompt
+	syscall
+
+	li $v0, 12
+	syscall
+	
+	lb $v0, move
+	
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	beq $v0, 49, invalid_move
+	
 new_game:
 	li $v0, 4
 	la $a0, new_game_prompt
@@ -91,7 +115,7 @@ exit:
 invalid_move:
 	li $v0, 4
 	la $a0, invalid_move_message
-
+	
 
 print_board:
 	li $v0, 4
