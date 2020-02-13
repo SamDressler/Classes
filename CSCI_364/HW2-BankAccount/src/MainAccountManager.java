@@ -30,9 +30,9 @@ public class MainAccountManager
         final int waitTime = Integer.parseInt(args[3]);
 
         //Create thread array to store the threads
-        int totalThreads = numDThreads + numWThreads;
-        final threadList[numDThreads+numWThreads];
-        threadCounter =0;
+        int totalThreads = (numDThreads + numWThreads);
+        final Thread threadList [totalThreads];
+        threadCounter = 0;
         // get singleton from the private constructor;
         final Account account = Account.getInstance();
         account.setBalance(balance);
