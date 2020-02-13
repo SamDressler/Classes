@@ -18,12 +18,12 @@ public class WithdrawlThread implements Runnable
             final int amount = ThreadLocalRandom.current().nextInt(1, 100);
             try 
             {
-                System.out.println("Withdrawing: " + amount);
+                //System.out.println("Withdrawing: " + amount);
                 withdraw(amount);
             } 
             catch (final InterruptedException e) 
             {
-                e.printStackTrace();
+                break;
             }
         }
     }
@@ -33,25 +33,22 @@ public class WithdrawlThread implements Runnable
         synchronized (account) 
         {
             final String name = Thread.currentThread().getName();
-            System.out.println("Current Working thread: " + name);
+            //System.out.println("Current Working thread: " + name);
 
             while ((account.getBalance() - amount) <= 0) 
             {
                 try 
                 {
-                    this.wait();
+                    account.wait();
                 } 
                 catch (final InterruptedException e)
                 {
-                    e.printStackTrace();
+                    break;
                 }
             } 
 
             Thread.sleep(100);
             account.setBalance((account.getBalance()-amount));
-            System.out.println(name+" Has Withdrawn: "+amount);
-            System.out.println("New Account Balance: "+account.getBalance());
-            System.out.println("---------------------------");
             account.notifyAll();
         }
     }

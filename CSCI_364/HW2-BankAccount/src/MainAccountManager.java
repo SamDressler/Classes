@@ -31,8 +31,8 @@ public class MainAccountManager
 
         //Create thread array to store the threads
         int totalThreads = (numDThreads + numWThreads);
-        final Thread threadList [totalThreads];
-        threadCounter = 0;
+        Thread[] myThreads = new Thread[totalThreads];
+        int threadCounter = 0;
         // get singleton from the private constructor;
         final Account account = Account.getInstance();
         account.setBalance(balance);
@@ -48,11 +48,11 @@ public class MainAccountManager
             //create a new deposit thread or dt from the dr runnable object
             Thread dt = new Thread(dr);
             //store the created thread in the array
-            threadList[threadCounter] = dt;
+            myThreads[threadCounter] = dt;
             //increment threadcounter
             threadCounter++;
             dt.start();
-            System.out.println("Depositor " + i + " created");
+            //System.out.println("Depositor " + i + " created");
         }
 
         // Initialize the withdrawl threads
@@ -64,28 +64,24 @@ public class MainAccountManager
             //create a new withdrawl thread or wt from the wr runnable object
             Thread wt = new Thread(wr);
             //store the created thread in the thread array
-            threadList[threadCounter] = wt;
+            myThreads[threadCounter] = wt;
             threadCounter++;
             wt.start();
-            System.out.println("Withdrawer " + i + " created");
+            //System.out.println("Withdrawer " + i + " created");
          }
         // Sleep the main thread for the amount of time set from the command line
-        final Thread t = Thread.currentThread();
-
-        t.setName("Main Thread");
-        System.out.println(t.getName() + " is sleeping"); 
         try 
         {
-            Thread.sleep(waitTime);
-            
+            Thread.sleep(waitTime);            
         } 
         catch (InterruptedException e) {
             System.out.println("Main Thread Interupted");
-            e.printStackTrace();
         }
+
         for(threadCounter=0; threadCounter < totalThreads; threadCounter++)
         {
-
+                System.out.println("Thread name: " +myThreads[threadCounter].getName());
+                myThreads[threadCounter].interrupt();
         }
         System.out.println("Final Balance: " + account.getBalance());
     }
