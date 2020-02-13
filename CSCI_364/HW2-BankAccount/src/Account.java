@@ -3,11 +3,11 @@
 public class Account
 {
     private static Account account = new Account();
-    private int balance = 0;
+    private Double balance = 0.;
     
     public Account()
     {
-
+        
     }
    
      public static Account getInstance()
@@ -15,13 +15,21 @@ public class Account
         return account;        
     }
     
-    public void setBalance(int balance)
+    public void setBalance(double balance)
     {
         this.balance = balance;
     }
-    public int getBalance()
+    public Double getBalance()
     {
         return balance;    
+    }
+    public synchronized void deposit(Double amount){
+        if(amount > 0.0 ){
+            balance += amount;
+        }
+        else{
+            System.out.println("Amount to deposit must be greater than 0");
+        }
     }
     
 }
