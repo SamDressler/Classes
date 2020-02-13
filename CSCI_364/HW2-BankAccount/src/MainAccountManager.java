@@ -28,31 +28,47 @@ public class MainAccountManager
         final int balance = Integer.parseInt(args[2]);
         final int maxBalance = balance * 2;
         final int waitTime = Integer.parseInt(args[3]);
+
+        //Create thread array to store the threads
+        int totalThreads = numDThreads + numWThreads;
+        final threadList[numDThreads+numWThreads];
+        threadCounter =0;
         // get singleton from the private constructor;
         final Account account = Account.getInstance();
         account.setBalance(balance);
         System.out.println("Starting Balance: " + account.getBalance());
         System.out.println("---------------------------");
         String threadName;
-        // initialize the deposit threads
-       // for (int i = 0; i < numDThreads; i++) 
-       // {
-            int i = 0;
+        //initialize the deposit threads
+        for (int i = 0; i < numDThreads; i++) 
+        {
             threadName = "Depsoitor_" + i;
-            final DepositThread dt = new DepositThread(threadName, maxBalance, account);
-            Thread d1t = new Thread(dt);
+            //Create a DepositThread object named dr (deposit runnable)
+            final DepositThread dr = new DepositThread(threadName, maxBalance, account);
+            //create a new deposit thread or dt from the dr runnable object
+            Thread dt = new Thread(dr);
+            //store the created thread in the array
+            threadList[threadCounter] = dt;
+            //increment threadcounter
+            threadCounter++;
+            dt.start();
             System.out.println("Depositor " + i + " created");
-      //  }
+        }
 
         // Initialize the withdrawl threads
-       // for (int i = 0; i < numWThreads; i++) 
-      //  {
-            i = 0;
+          for (int i = 0; i < numWThreads; i++) 
+        {
             threadName = "Withdrawer_" + i;
-            final WithdrawlThread wt = new WithdrawlThread(threadName, account);
-            Thread w1t = new Thread(wt);
+            //create a WithdrawlThread object named wr (ithdrawl runnable)
+            final WithdrawlThread wr = new WithdrawlThread(threadName, account);
+            //create a new withdrawl thread or wt from the wr runnable object
+            Thread wt = new Thread(wr);
+            //store the created thread in the thread array
+            threadList[threadCounter] = wt;
+            threadCounter++;
+            wt.start();
             System.out.println("Withdrawer " + i + " created");
-       // }
+         }
         // Sleep the main thread for the amount of time set from the command line
         final Thread t = Thread.currentThread();
 
@@ -60,13 +76,16 @@ public class MainAccountManager
         System.out.println(t.getName() + " is sleeping"); 
         try 
         {
-            d1t.start();
-            w1t.start();
             Thread.sleep(waitTime);
+            
         } 
         catch (InterruptedException e) {
             System.out.println("Main Thread Interupted");
             e.printStackTrace();
+        }
+        for(threadCounter=0; threadCounter < totalThreads; threadCounter++)
+        {
+
         }
         System.out.println("Final Balance: " + account.getBalance());
     }

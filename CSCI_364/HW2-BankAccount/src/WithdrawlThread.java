@@ -47,7 +47,7 @@ public class WithdrawlThread implements Runnable
                 }
             } 
 
-            Thread.sleep(1000);
+            Thread.sleep(100);
             account.setBalance((account.getBalance()-amount));
             System.out.println(name+" Has Withdrawn: "+amount);
             System.out.println("New Account Balance: "+account.getBalance());
