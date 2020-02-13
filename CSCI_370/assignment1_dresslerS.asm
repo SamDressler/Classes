@@ -6,8 +6,8 @@ choose_piece_prompt: 	.asciiz "Player 1:\nChoose your piece: (X/O):  "
 invalid_choice_message:	.asciiz "\n---Invalid choice, try again---\n"
 invalid_move_message:	.asciiz "\n---Invalid move, try again---\n"
 
-p1_select_move_prompt: 	.asciiz "Player 1:\nEnter the next move (1-9): " 
-p2_select_move_prompt: 	.asciiz "Player 2:\nEnter the next move (1-9): " 
+p1_select_move_prompt: 	.asciiz "\nPlayer 1 - Enter the next move (1-9): " 
+p2_select_move_prompt: 	.asciiz "\nPlayer 2 - Enter the next move (1-9): " 
 p1_wins:		.asciiz "Player 1 Wins!!!\n"
 p2_wins:		.asciiz "Player 2 Wins!!!\n"
 draw:			.asciiz "The game is a draw!\n"
@@ -17,6 +17,8 @@ new_game_prompt: 	.asciiz "\nNew game (Y/N): "
 exit_message: 		.asciiz "\nThank you for playing!"
 p1_choice: 		.asciiz "\nPlayer 1 chose : "
 p2_choice: 		.asciiz "\nPlayer 2 gets : "
+p1_goes_first: 		.asciiz "\n********\nPlayer 1 was selected to go first!\n********"
+p2_goes_first: 		.asciiz "\n********\nPlayer 2 was selected to go first!\n********"
 
 move: 			.byte '*'
 p1_piece: 		.byte '*'
@@ -50,48 +52,85 @@ main:
  	li $v0, 4		#load register v0 wuh syscall code for printing a string
  	la $a0, startup_prompt  #load the address of the game started prompt into $a0 
 	syscall 		#print out the string
-	
-	jal choose_piece	#prompt the player to choose their piece
+jump1:	
+	jal choose_piece 	#procedure that allows player 1 to choose their piece and then assigns the opposite to player 2
 
-validated:	
+validated:
+	jal random_first_move	#get random number to decide who goes first
 	
+	beqz $a0, jump3	#if random number is 0, p1 goes first
+jump2:
+	jal p2_pick_move
+	#validate
+	#plot
+	#check win
+	#check draw
+	#set cur_piece to p2's piece
+	j plot_move
+jump3:	
+	jal p1_pick_move
+	#validate
+	#plot
+	#check win
+	#check draw
+	#set cur_piece to p2's piece	
+	j plot_move
+plot_move:
 	jal print_board		#print out the board with the index
+	#j switch_turns		#let the other player have their turn
 	
-jump2:		
+next_turn:		
 	j continue 
 	
 
-######### Code the decides what happens 
+######### Code the decides what happens ######################################################
+switch_turns:
+	
+
 #first_move - procedure that deceides which player goes first 
-first_move:
+random_first_move:
 	li $a1, 2 
       	li $v0, 42
      	syscall
-     	beqz $a0, p1_first
-     	
-p1_first: 
+	beqz $v0, p1_first
+	j p2_first
+p1_first:
+	li $v0, 4
+	la $a0, p1_goes_first
+	syscall
+	j decided
+p2_first:
+	li $v0, 4
+	la $a0, p2_goes_first
+	syscall
+	j decided
+
+decided:
+	jr $ra
+#print out a pick move prompt for player 1
+p1_pick_move: 
 	sb $t0, p1_piece
 	lb $t0, cur_piece
-	
-#select_move prints prompt asking what 
-select_move:
 	
 	li $v0, 4
 	la $a0, p1_select_move_prompt
 	syscall
-
-	li $v0, 12
+	jr $ra
+#print out a pick move prompt for player 2
+p2_pick_move:
+	sb $t0, p2_piece
+	lb $t0, cur_piece
+	
+	li $v0, 4
+	la $a0, p2_select_move_prompt
 	syscall
-	
-	lb $v0, move
-	
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
-	beq $v0, 49, invalid_move
+
+	jr $ra
+#get_move - gets the current move from the user 
+get_move:
+	#TODO: 
+	#beq $v0, 49, invalid_move
+
 	
 new_game:
 	li $v0, 4
@@ -131,11 +170,15 @@ continue:
 	li, $v0, 12
 	syscall 
 	
-	beq $v0, 89 , select_move	#continue if Y or y
-	beq $v0, 121, select_move
+	beq $v0, 89 , temp		#continue if Y or y
+	beq $v0, 121, temp
 	beq $v0, 78 , new_game		#exit if user enters n or N
 	beq $v0, 110, new_game
-	
+	temp:
+		lb $t0, cur_piece
+		move $t0, $v0 
+		beq $v0, $t0 , p2_pick_move
+		j p1_pick_move
 	
 choose_piece:
 	li $v0, 4
@@ -147,6 +190,7 @@ choose_piece:
 
 	sb $v0, p1_piece	#store p1's choice into p1_piece
 
+#goes straight from choose_piece into validate piece
 validate_piece:
 	lb $v0, p1_piece	#load player 1's piece to see if it is valid
 	
@@ -163,9 +207,9 @@ validate_piece:
 	j jump1
 		
 valid_chose_X: 			#Player 1 chose X so set player 2's piece to O
-	addi $v0, $zero, 88
+	li $v0,'X'
 	sb $v0, p1_piece
-
+	 
 	li $v0, 4
 	la $a0, p1_choice
 	syscall
@@ -187,7 +231,7 @@ valid_chose_X: 			#Player 1 chose X so set player 2's piece to O
 	
 	j validated
 valid_chose_O:			#Player 1 chose O so set player 2's piece to X	
-	addi $v0, $zero, 79
+	li $v0, 'O'
 	sb $v0, p1_piece
 	
 	li $v0, 4
