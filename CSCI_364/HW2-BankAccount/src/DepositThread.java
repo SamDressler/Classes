@@ -7,12 +7,16 @@ public class DepositThread implements Runnable
 {
     private Double maxBalance;
     private Account account;
+    private double totalDeposited = 0;
+    private int numDeposits = 0;
+    private int numWaits = 0;
+    private String name;
 
-    public DepositThread(final String threadName, final double max, final Account userAccount) 
+    public DepositThread(final String name, final double max, final Account userAccount) 
     {
         this.maxBalance = max;
         this.account = userAccount;
-        Thread.currentThread().setName(threadName);
+        this.name = name;
     }
 
     @Override
@@ -34,21 +38,47 @@ public class DepositThread implements Runnable
     }
 
     // depsoit method, contains the critical section for a depositing thread
-    private void deposit(final int amount) throws InterruptedException {
-        synchronized (account) {
-            final String name = Thread.currentThread().getName();
-          //  System.out.println("Current Working thread: " + name);
-            while ((account.getBalance() + amount) > maxBalance) {
+    private void deposit(final int amount) throws InterruptedException
+     {
+        synchronized (account) 
+        {
+            while ((account.getBalance() + amount) > maxBalance) 
+            {
                 // System.out.println(name+": Max Balance Reached! The balance must decrease");
-                try {
+                try 
+                {
                     account.wait();
-                } catch (final InterruptedException e) {
+                    numWaits++;
+                } 
+                catch (final InterruptedException e) 
+                {
                     break;
                 }
             }
             Thread.sleep(100);
             account.setBalance((account.getBalance() + amount));
+            totalDeposited += amount;
+            numDeposits++;
             account.notifyAll();
         }
+    }
+    public String getName()
+    {
+        return this.name;
+    }
+
+    public int getNumDeposits()
+    {
+        return this.numDeposits;
+    }
+
+    public double getTotalDeposited()
+    {
+        return this.totalDeposited;
+    }
+
+    public int getNumWaits()
+    {
+        return this.numWaits;
     }
 }
