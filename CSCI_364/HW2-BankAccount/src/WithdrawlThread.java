@@ -1,3 +1,6 @@
+//Sam Dressler 
+//HW2 CSCI 364
+//2/17/2020
 import java.util.concurrent.ThreadLocalRandom;
 
 // The consumer
@@ -52,8 +55,6 @@ public class WithdrawlThread implements Runnable
                     break;
                 }
             } 
-
-            Thread.sleep(100);
             account.setBalance((account.getBalance()-amount));
             totalWithdrawn += amount;
             numWithdrawls++;

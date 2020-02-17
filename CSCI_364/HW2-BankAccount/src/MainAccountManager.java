@@ -49,7 +49,7 @@ public class MainAccountManager
         //initialize the deposit threads
         for (int i = 0; i < numDThreads; i++) 
         {
-            threadName = "Depsoitor_" + i;
+            threadName = "Depsoitor_" + i+1;
             //Create a DepositThread object named dr (deposit runnable)
             depositObjects[i] = new DepositThread(threadName, maxBalance, account);
             final DepositThread dr = depositObjects[i];
@@ -60,13 +60,12 @@ public class MainAccountManager
             //increment threadcounter
             threadCounter++;
             dt.start();
-            //System.out.println("Depositor " + i + " created");
         }
 
         // Initialize the withdrawl threads
           for (int i = 0; i < numWThreads; i++) 
         {
-            threadName = "Withdrawer_" + i;
+            threadName = "Withdrawer_" + i+1;
             //create a WithdrawlThread object named wr (ithdrawl runnable)
             withdrawObjects[i] = new WithdrawlThread(threadName, account);
             final WithdrawlThread wr = withdrawObjects[i];
@@ -110,5 +109,6 @@ public class MainAccountManager
         }
         System.out.println("--------------------------------");
         System.out.println("Final Balance: " + account.getBalance());
+        System.exit(0);
     }
 }

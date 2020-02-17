@@ -1,5 +1,7 @@
-//Sam Dressler
-//Deposit runnable class 
+//Sam Dressler 
+//HW2 CSCI 364
+//2/17/2020
+//Deposit Runnable 
 import java.util.concurrent.ThreadLocalRandom;
 
 // The Producer
@@ -55,7 +57,6 @@ public class DepositThread implements Runnable
                     break;
                 }
             }
-            Thread.sleep(100);
             account.setBalance((account.getBalance() + amount));
             totalDeposited += amount;
             numDeposits++;
