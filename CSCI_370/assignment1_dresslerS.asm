@@ -2,38 +2,25 @@
 #CSCI 370, 2/18/2020
 ###########################################################################################################
 #2-player tic-tac-toe game
-#Player 1 will choose a piece and then player 2 will select a piece
-#A player will then be randomly chosen to go first
-#once the starting player is decided, they will choose a location 1-9 on the board and begin the game.
-#after each move the program will ask the user if they want to continue. If no, the program will 
-#ask the user if they want to play another game.
-#once the game completes (p1Win, p2Win, or Draw) the game will ask if they want to play a new game,
-#if no then the program will exit, if yes then the program will repeat.
 ########################################################################################################### 
 .data
 next_move: 		.word 1
-true: 			.word 1
-false:			.word 0
 offset:			.word 0
+counter: 		.word 0
 startup:	      	.ascii "\n/-----------------Welcome!----------------\\\n"
 		     	.ascii "| Beginning a One-Player Tic-Tac-Toe Game |\n"
 		     	.asciiz"\\-----------------------------------------/\n"
-choose_piece_prompt: 	.asciiz "Player 1:\nChoose your piece: (X/O):  "
+choose_piece_prompt: 	.asciiz "Choose your piece: (X/O):  "
 invalid_choice_message:	.asciiz "\n---Invalid choice, try again---\n"
 invalid_move_message:	.asciiz "\n---Invalid move, try again---\n"
-p1_get_move_prompt: 	.asciiz "\nPlayer 1 - Enter the next move (1-9): " 
-p2_get_move_prompt: 	.asciiz "\nPlayer 2 - Enter the next move (1-9): " 
+get_move_prompt: 	.asciiz "\nEnter the next move (1-9): " 
 p1_wins:		.asciiz "Player 1 Wins!!!\n"
 p2_wins:		.asciiz "Player 2 Wins!!!\n"
-draw:			.asciiz "The game is a draw!\n"
-
+draw_message:		.asciiz "The game is a draw!\n"
+starting_piece:		.asciiz "Starting piece: "
 continue_prompt : 	.asciiz "\nContinue? (Y/N): "
 new_game_prompt: 	.asciiz "\nNew game? (Y/N): "
 exit_message: 		.asciiz "\nThank you for playing!"
-p1_choice: 		.asciiz "\nPlayer 1 chose : "
-p2_choice: 		.asciiz "\nPlayer 2 gets : "
-p1_goes_first: 		.asciiz "\n********\nPlayer 1 was selected to go first!\n********"
-p2_goes_first: 		.asciiz "\n********\nPlayer 2 was selected to go first!\n********"
 
 p1_piece: 		.byte '*'
 p2_piece: 		.byte '*'
@@ -81,25 +68,11 @@ validate_piece:
 valid_chose_X: 			
 	li $v0,'X'
 	sb $v0, p1_piece
-print_p2_piece:	 
-	li $v0, 4
-	la $a0, p1_choice
-	syscall
 	
-	li $v0, 11
-	lb $a0, p1_piece
-	syscall			#print out Player 1 chose X
+	#print out Player 1 chose X
 set_p2_piece:	
 	addi $v0, $zero, 79
 	sb $v0, p2_piece
-	
-	li $v0, 4
-	la $a0, p2_choice
-	syscall
-	
-	li $v0, 11
-	lb $a0, p2_piece	
-	syscall			#print out player 2 gets O
 	
 	j valid_piece
 
@@ -107,31 +80,16 @@ set_p2_piece:
 valid_chose_O:		
 	li $v0, 'O'
 	sb $v0, p1_piece
-print_p1_piece:	
-	li $v0, 4
-	la $a0, p1_choice
-	syscall
-	
-	li $v0, 11
-	lb $a0, p1_piece
-	syscall
 set_p1_piece:	
 	addi $v0, $zero, 88
 	sb $v0, p2_piece
 	
-	li $v0, 4
-	la $a0, p2_choice
-	syscall
-	
-	li $v0, 11
-	lb $a0, p2_piece
-	syscall
-	
 	j valid_piece	
-
+#prints the initial board and then finds the starting piece
 valid_piece:
 	jal print_board
 	jal random_first_move
+#orubts out the current state of the board.
 print_board:
 	li $v0, 4
 	la $a0, board
@@ -143,74 +101,103 @@ random_first_move:
 	li $a1, 2 
       	li $v0, 42
      	syscall
-	beqz $a0, p1_turn
-	j p2_turn
+	beqz $a0, p1_turn_temp
+	j p2_turn_temp
 
+p1_turn_temp:
+	li $v0, 4
+	la $a0, starting_piece
+	syscall
+	li $v0, 11
+	lb $a0, p1_piece
+	syscall
+	j p1_turn
+p2_turn_temp:
+	li $v0, 4
+	la $a0, starting_piece
+	syscall
+	li $v0, 11
+	lb $a0, p2_piece
+	syscall
+	j p2_turn
 #p1_turn - asks for the next move from player 1. 
 #Each turn consists of: Move selection, move validation, move displaying,
 #			Checking for win, checking for draw, and switching turns
 p1_turn:
 	lb $t0, p1_piece
-	sb $a0, current_piece 
-	li $v0, 11
-	syscall
-	j first_pass
-p1_turn_loop:
-	li $v0, 4
-	la $a0, invalid_choice_message
-	syscall
-first_pass:			#skip the invalid message first time through
-	la $a0, p1_get_move_prompt
-	li $v0, 4
-	syscall
-
-	li $v0,5
-	syscall
+	sb $t0, current_piece 
+	j turn
+p2_turn:
+	lb $t0, p2_piece
+	sb $t0, current_piece
+	j turn
+turn:
 	
+get_users_move:
+	li $v0, 4
+	la $a0, get_move_prompt
+	syscall				#print the get move prompt
+	li $v0 5
+	syscall				#get the move
 	sw $v0, next_move
 	lw $a0, next_move
 	li $t0, 1
 	li $t1, 9
-	blt $a0, $t0, p1_turn_loop	#if the user enters a number less than 1 print invalid choice
-	bgt $a0, $t1, p1_turn_loop 	#if the user enters a number greeater than 9 print invalid choice and try again
+	blt $a0, $t0, invalid_move	#if the user enters a number less than 1 print invalid choice
+	bgt $a0, $t1, invalid_move	#if the user enters a number greeater than 9 print invalid choice and try again
 	#load next_move into $a0 to be used in calculate offset
 	lw $a0, next_move
 	#find location for next move
 find_offset:
 	jal calculate			#call the function to get the offset
 validate_move:
-#	jal check_move	
+	jal check_move	
 	jal set_move
 	jal print_board
 #check for win
+#	jal check_win
 #check for draw
-	lw $a0, offset			#verify offset TEMP
-	li $v0, 1
-	syscall
+#	jal check_win
+	lb $t0, current_piece
+	lb $t1, p1_piece
+	beq $t0, $t1, p2_turn
+	j p1_turn
 
-		
-
-	j p2_turn #end of player 1's turn so jump to player 2
-#p2_trun - asks for the next move from player 2
-#Each turn consists of: Move selection, move validation, move displaying,
-#			Checking for win, checking for draw, and switching turns
-p2_turn:
-p2_turn_loop:
-	la $a0, p2_get_move_prompt
+invalid_move:
 	li $v0, 4
+	la $a0, invalid_move_message
 	syscall
-	
-	j exit
-	j p1_turn #end of player 2's turn so jump to player 1
-#checkmove- check if the player's move is valid and then return
+	j get_users_move
 
+
+#checkmove- check if the player's move is valid and then return
+check_move:
+	lw $t0, offset
+	lb $t1, board($t0)
+	li $t2, 32
+	beq $t1, $t2, set_move
+	j invalid_move
 #setmove - take the offset and create the move
 set_move:
 	lw  $t0, offset           # Load $t0 with the offset.
-	li  $t1, 'X'              # Load $t1 with the marker 'X'.
+	lb  $t1, current_piece    # Load $t1 with the marker 'X'.
 	sb  $t1, board($t0)       # Store the marker to the location, board+offset.
+increment_counter:
+	lw $t0, counter
+	li $t2, 1
+	add $t0, $t0, $t2
+	sw $t0, counter
+	
+	li $t1, 9
+	beq $t0, $t1, draw
+	
+	li $v0, 1
+	move $a0, $t2
+	syscall
 	
 	jr $ra
+
+
 #calculate - function that calculates the offset for a player's move
 #parameters - $a0 - the users valid move
 #returns - $v0 the offset value
@@ -244,7 +231,8 @@ calculate:
 	#syscall			#test print offset
 
 	jr $ra		#return to caller
-			
+
+draw:			
 #exit- displays an exit message before exiting the program
 exit:
 	li $v0, 4
