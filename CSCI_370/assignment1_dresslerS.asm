@@ -4,9 +4,10 @@
 #2-player tic-tac-toe game
 ########################################################################################################### 
 .data
-next_move: 		.word 1
 offset:			.word 0
 counter: 		.word 0
+count:			.word 1
+here: 			.asciiz "here: \n"
 startup:	      	.ascii "\n/-----------------Welcome!----------------\\\n"
 		     	.ascii "| Beginning a One-Player Tic-Tac-Toe Game |\n"
 		     	.asciiz"\\-----------------------------------------/\n"
@@ -20,14 +21,26 @@ draw_message:		.asciiz "The game is a draw!\n"
 starting_piece:		.asciiz "Starting piece: "
 continue_prompt : 	.asciiz "\nContinue? (Y/N): "
 new_game_prompt: 	.asciiz "\nNew game? (Y/N): "
+new_game_message:	.asciiz "\nStarting new game..."
 exit_message: 		.asciiz "\nThank you for playing!"
-
+space:			.byte ' '
 p1_piece: 		.byte '*'
 p2_piece: 		.byte '*'
 current_piece: 		.byte '*'
-board:  .ascii   "\n\n        | |        1|2|3\n       -----       -----"
-        .ascii     "\n        | |        4|5|6\n       -----       -----"
-        .asciiz    "\n        | |        7|8|9\n"   
+board_counter: 		.byte 1
+next_move:		.word 0
+#next_move: 		.byte 1
+board: 			.ascii   "\n\n        | |        1|2|3\n       -----       -----"
+		        .ascii     "\n        | |        4|5|6\n       -----       -----"
+		        .asciiz    "\n        | |        7|8|9\n"   
+h_combos:		.ascii  "1 2 3"
+			.ascii  "4 5 6"
+			.asciiz "7 8 9"
+v_combos:		.ascii  "1 2 4"
+			.ascii  "2 5 8"
+			.asciiz "3 6 9"			
+d_combos:		.ascii  "1 5 9"
+			.asciiz "3 5 7"
 #Begin code section 
 .text
 start:
@@ -131,8 +144,8 @@ p2_turn:
 	lb $t0, p2_piece
 	sb $t0, current_piece
 	j turn
-turn:
-	
+#turn - the main function calls being executed during each turn
+turn:	
 get_users_move:
 	li $v0, 4
 	la $a0, get_move_prompt
@@ -147,17 +160,22 @@ get_users_move:
 	bgt $a0, $t1, invalid_move	#if the user enters a number greeater than 9 print invalid choice and try again
 	#load next_move into $a0 to be used in calculate offset
 	lw $a0, next_move
-	#find location for next move
+
+#find_offset - find location for next move
 find_offset:
 	jal calculate			#call the function to get the offset
 validate_move:
-	jal check_move	
+	jal check_move
+move_valid:	
 	jal set_move
 	jal print_board
 #check for win
 #	jal check_win
 #check for draw
-#	jal check_win
+	jal check_draw
+#ask user to contiue
+	jal continue
+#switch what piece is currently being used
 	lb $t0, current_piece
 	lb $t1, p1_piece
 	beq $t0, $t1, p2_turn
@@ -169,32 +187,29 @@ invalid_move:
 	syscall
 	j get_users_move
 
-
 #checkmove- check if the player's move is valid and then return
 check_move:
 	lw $t0, offset
 	lb $t1, board($t0)
 	li $t2, 32
-	beq $t1, $t2, set_move
+	beq $t1, $t2, move_valid
 	j invalid_move
+#checkdraw-function increments a counter and if it gets to 9 then the game is over
+check_draw:
+	lw $t0, counter
+	li $t1, 1
+	add $t0, $t0, $t1	#increment counter
+	sw $t0, counter		
+	li $t2, 9
+	lw $t0, counter
+	beq $t0, $t2, draw	#jump to draw if the amount of possible plays has been met
+	jr $ra
 #setmove - take the offset and create the move
 set_move:
 	lw  $t0, offset           # Load $t0 with the offset.
 	lb  $t1, current_piece    # Load $t1 with the marker 'X'.
 	sb  $t1, board($t0)       # Store the marker to the location, board+offset.
-increment_counter:
-	lw $t0, counter
-	li $t2, 1
-	add $t0, $t0, $t2
-	sw $t0, counter
-	
-	li $t1, 9
-	beq $t0, $t1, draw
-	
-	li $v0, 1
-	move $a0, $t2
-	syscall
-	
+
 	jr $ra
 
 
@@ -232,7 +247,80 @@ calculate:
 
 	jr $ra		#return to caller
 
-draw:			
+#continue - user decides if they want to continue the game or start a new game
+continue:
+	li $v0, 4
+	la $a0, continue_prompt
+	syscall
+	li, $v0, 12
+	syscall 
+	
+	beq $v0, 89 , return		#continue if Y or y
+	beq $v0, 121, return
+	beq $v0, 78 , new_game		#exit if user enters n or N
+	beq $v0, 110, new_game
+	li $v0, 4 
+	la $a0, invalid_choice_message
+	syscall
+	j continue
+return:
+	jr $ra
+	
+new_game:
+	li $v0, 4
+	la $a0, new_game_prompt
+	syscall
+	
+	li, $v0, 12
+	syscall 
+	
+	beq $v0, 89 , start_temp	#continue if Y or y
+	beq $v0, 121, start_temp
+	beq $v0, 78 , exit 		#exit if user enters n or N
+	beq $v0, 110, exit
+	
+	li $v0, 4 
+	la $a0, invalid_choice_message
+	syscall
+	j new_game
+
+start_temp:	#reset some things before restarting the game
+#reset counter
+reset_counter:
+	add $t0, $zero, $zero
+	sw $t0, counter
+	
+	li $v0, 4
+	la $a0, new_game_message
+	syscall
+	
+	lb $t0, space
+	sb $t0, current_piece 
+reset_board:
+	lw $t0, count
+	move $a0, $t0
+	
+	jal calculate
+	jal set_move
+	
+	lw $t0, count
+	addi $t0, $t0, 1
+	sw $t0, count
+	li $t2, 10
+	
+	beq $t0, $t2, reset_count
+	j reset_board 
+reset_count:
+	lw $t0, count
+	add $t0, $zero, $zero
+	sw $t0, count
+	j start	
+		
+draw:	
+	li $v0, 4
+	la $a0, draw_message
+	syscall		
+	j new_game
 #exit- displays an exit message before exiting the program
 exit:
 	li $v0, 4
