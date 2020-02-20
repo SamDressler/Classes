@@ -31,12 +31,100 @@ board_counter: 		.byte 1
 next_move:		.word 0
 #next_move: 		.byte 1
 board: 			.ascii   "\n\n        | |        1|2|3\n       -----       -----"
-		        .ascii     "\n        | |        4|5|6\n       -----       -----"
+		        .ascii     "\n       X|X|        4|5|6\n       -----       -----"
 		        .asciiz    "\n        | |        7|8|9\n"   
+comb: .ascii  "235947  "      # move 1
+         .ascii  "1358    "      # move 2
+         .ascii  "125769  "      # move 3
+         .ascii  "1756    "      # move 4
+         .ascii  "19283746"      # move 5
+         .ascii  "3945    "      # move 6
+         .ascii  "143589  "      # move 7
+         .ascii  "2579    "      # move 8
+         .ascii  "153678  "      # move 9
+         
+         h_combos:		.ascii  "1 2 3"
+			.ascii  "4 5 6"
+			.asciiz "7 8 9"
+v_combos:		.ascii  "1 2 4"
+			.ascii  "2 5 8"
+			.asciiz "3 6 9"			
+d_combos:		.ascii  "1 5 9"
+			.asciiz "3 5 7"
+			
+p1:    .asciiz  "Enter the next move: "
+p2:    .asciiz  "O wins"
+			
 #Begin code section 
 .text
 start:
-	la $a0, startup
+	la    $a0, board
+	li    $v0, 4
+	syscall
+	
+        la    $a0, p1
+        li    $v0, 4
+        syscall
+        
+        li    $v0, 12
+        syscall
+        move  $s0, $v0        
+        
+         li  $t0, 63           # Load $t0 with the offset.
+        li  $t1, 'X'              # Load $t1 with the marker 'X'.
+        sb  $t1, board($t0)       # Store the marker to the location, board+offset.
+        
+	la    $a0, board
+	li    $v0, 4
+	syscall
+	
+	sub   $s0, $s0, '1'
+	mul   $s0, $s0, 8        		
+	add   $s0, $s0, 2
+	
+	lb    $t3, comb($s0)   # $t0 = '4'
+	sub   $a0, $t3, '0'    # $a0 = 4
+	move  $v0, $a0
+	mul   $a0, $a0, 2
+	add   $a0, $a0, 7
+	sub   $v0, $v0, 1
+	div   $v0, $v0, 3
+	mul   $v0, $v0, 44
+	add   $v0, $v0, $a0
+	move  $s1, $v0 
+	move  $a0, $v0
+	li    $v0, 1
+	syscall
+	lb    $a0, board($s1)
+        bne   $a0, 'X', L2
+        
+        add   $s0, $s0, 1
+	lb    $s0, comb($s0)   # $t0 = '5'
+	sub   $a0, $s0, '0'    # $a0 = 5
+	move  $v0, $a0
+	mul   $a0, $a0, 2
+	add   $a0, $a0, 7
+	sub   $v0, $v0, 1
+	div   $v0, $v0, 3
+	mul   $v0, $v0, 44
+	add   $v0, $v0, $a0
+	move  $s0, $v0 
+	move  $a0, $v0
+	li    $v0, 1
+	syscall
+	lb    $a0, board($s0)
+        bne   $a0, 'X', L2
+        la    $a0, p2
+        li    $v0, 4
+        syscall	
+	
+	
+L2:	
+	        		          		        		          		
+	li   $v0, 10
+	syscall
+	
+		la $a0, startup
 	li $v0, 4
 	syscall
 choosePieceStart:
@@ -57,6 +145,9 @@ get_piece:
 validate_piece:
 	lb $v0, p1_piece	#load player 1's piece to see if it is valid
 	
+	
+	li   $v0, 10
+	syscall
 	sb $v1, p2_piece
 	beq $v0, 88, valid_chose_X	#check if equal to 'X'
 	beq $v0, 120, valid_chose_X	#check if equal to 'x'
@@ -142,10 +233,10 @@ get_users_move:
 	li $v0, 4
 	la $a0, get_move_prompt
 	syscall				#print the get move prompt
-	li $v0 12
+	li $v0 5
 	syscall				#get the move
-	move $a0, $v0			#$a0 = 'move' as ascii
-
+	sw $v0, next_move
+	lw $a0, next_move
 	li $t0, 1
 	li $t1, 9
 	blt $a0, $t0, invalid_move	#if the user enters a number less than 1 print invalid choice
@@ -201,7 +292,7 @@ set_move:
 	lw  $t0, offset           # Load $t0 with the offset.
 	lb  $t1, current_piece    # Load $t1 with the marker 'X'.
 	sb  $t1, board($t0)       # Store the marker to the location, board+offset.
-	
+
 	jr $ra
 
 
@@ -236,7 +327,7 @@ calculate:
 	#li $v0, 1
 	#lw $a0, offset
 	#syscall			#test print offset
-	
+
 	jr $ra		#return to caller
 
 #continue - user decides if they want to continue the game or start a new game
