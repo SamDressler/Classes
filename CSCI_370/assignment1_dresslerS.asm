@@ -7,7 +7,6 @@
 offset:			.word 0
 counter: 		.word 0
 count:			.word 1
-here: 			.asciiz "here: \n"
 startup:	      	.ascii "\n/-----------------Welcome!----------------\\\n"
 		     	.ascii "| Beginning a One-Player Tic-Tac-Toe Game |\n"
 		     	.asciiz"\\-----------------------------------------/\n"
@@ -15,14 +14,13 @@ choose_piece_prompt: 	.asciiz "Choose your piece: (X/O):  "
 invalid_choice_message:	.asciiz "\n---Invalid choice, try again---\n"
 invalid_move_message:	.asciiz "\n---Invalid move, try again---\n"
 get_move_prompt: 	.asciiz "\nEnter the next move (1-9): " 
-p1_wins:		.asciiz "Player 1 Wins!!!\n"
-p2_wins:		.asciiz "Player 2 Wins!!!\n"
 draw_message:		.asciiz "The game is a draw!\n"
 starting_piece:		.asciiz "Starting piece: "
 continue_prompt : 	.asciiz "\nContinue? (Y/N): "
 new_game_prompt: 	.asciiz "\nNew game? (Y/N): "
 new_game_message:	.asciiz "\nStarting new game..."
 exit_message: 		.asciiz "\nThank you for playing!"
+user_choice:		.asciiz" Chose: "
 space:			.byte ' '
 p1_piece: 		.byte '*'
 p2_piece: 		.byte '*'
@@ -42,16 +40,12 @@ start:
 choosePieceStart:
 	#jump to label that handles getting the choice from the user and then validating it
 	j get_piece
-
-
 get_piece:
 	la $a0, choose_piece_prompt
 	li $v0, 4
 	syscall			#print out prompt so player 1 picks their piece
-
 	li $v0, 12		#read byte entered by player1
 	syscall 		#read user input
-
 	sb $v0, p1_piece	#store p1's choice into p1_piece
 #validate_piece - this checks what the user enters and if it is x/X or o/X it is valid
 validate_piece:
@@ -62,25 +56,20 @@ validate_piece:
 	beq $v0, 120, valid_chose_X	#check if equal to 'x'
 	beq $v0, 79, valid_chose_O	#check if equal to 'O'
 	beq $v0, 111, valid_chose_O	#check if equal to 'o'
-	
 	li $v0, 4
 	la $a0, invalid_choice_message
 	syscall
-	
 	j get_piece
 
 #valid_chose_X - this sets player 1's piece to X and player 2's piece to O
 valid_chose_X: 			
 	li $v0,'X'
 	sb $v0, p1_piece
-	
 	#print out Player 1 chose X
 set_p2_piece:	
 	addi $v0, $zero, 79
 	sb $v0, p2_piece
-	
 	j valid_piece
-
 #valid_chose_O - this sets player 1's piece to O and player 2's piece to X
 valid_chose_O:		
 	li $v0, 'O'
@@ -88,7 +77,6 @@ valid_chose_O:
 set_p1_piece:	
 	addi $v0, $zero, 88
 	sb $v0, p2_piece
-	
 	j valid_piece	
 #prints the initial board and then finds the starting piece
 valid_piece:
@@ -142,17 +130,16 @@ get_users_move:
 	li $v0, 4
 	la $a0, get_move_prompt
 	syscall				#print the get move prompt
-	li $v0 12
+	li $v0 5
 	syscall				#get the move
-	move $a0, $v0			#$a0 = 'move' as ascii
-
+	sw $v0, next_move
+	move $a0, $v0			
 	li $t0, 1
 	li $t1, 9
 	blt $a0, $t0, invalid_move	#if the user enters a number less than 1 print invalid choice
 	bgt $a0, $t1, invalid_move	#if the user enters a number greeater than 9 print invalid choice and try again
 	#load next_move into $a0 to be used in calculate offset
 	lw $a0, next_move
-
 #find_offset - find location for next move
 find_offset:
 	jal calculate			#call the function to get the offset
@@ -161,10 +148,18 @@ validate_move:
 move_valid:	
 	jal set_move
 	jal print_board
-#check for win
-#	jal check_win
 #check for draw
 	jal check_draw
+#print users move
+	li $v0, 11
+	lb $a0, current_piece
+	syscall
+	li $v0, 4
+	la $a0, user_choice
+	syscall
+	li $v0, 1
+	lw $a0, next_move
+	syscall
 #ask user to contiue
 	jal continue
 #switch what piece is currently being used
@@ -201,42 +196,28 @@ set_move:
 	lw  $t0, offset           # Load $t0 with the offset.
 	lb  $t1, current_piece    # Load $t1 with the marker 'X'.
 	sb  $t1, board($t0)       # Store the marker to the location, board+offset.
-	
 	jr $ra
-
-
 #calculate - function that calculates the offset for a player's move
 #parameters - $a0 - the users valid move
 #returns - $v0 the offset value
 calculate: 	
-
 	move $t7, $a0		#move the passed value to $t7
 				#store the value of the offset in $v0
 	#start calculating second half
 	li $t1, 1
-	sub $t6, $t7, $t1	# offset = [$v0 -1]			
-	
+	sub $t6, $t7, $t1	# offset = [$v0 -1]				
 	li $t1, 3		#offset = [offset / 3]
-	div $t6, $t6, $t1
-	
+	div $t6, $t6, $t1	
 	li $t0, 44
 	mul $t6, $t6, $t0	#middle * 44
 	#done with second half
 	#start first half		
 	li $t0, 2		
-	mul $t1, $t0, $t7	#2 x (user_value)	
-	
+	mul $t1, $t0, $t7	#2 x (user_value)		
 	li $t0, 7
-	add $t1, $t1, $t0	#2*usrval + 7
-	
-	add $t1, $t1, $t6	#first half + second half
-	
-	sw $t1, offset  
-	
-	#li $v0, 1
-	#lw $a0, offset
-	#syscall			#test print offset
-	
+	add $t1, $t1, $t0	#2*usrval + 7	
+	add $t1, $t1, $t6	#first half + second half	
+	sw $t1, offset  	
 	jr $ra		#return to caller
 
 #continue - user decides if they want to continue the game or start a new game
@@ -246,7 +227,6 @@ continue:
 	syscall
 	li, $v0, 12
 	syscall 
-	
 	beq $v0, 89 , return		#continue if Y or y
 	beq $v0, 121, return
 	beq $v0, 78 , new_game		#exit if user enters n or N
@@ -257,20 +237,16 @@ continue:
 	j continue
 return:
 	jr $ra
-	
 new_game:
 	li $v0, 4
 	la $a0, new_game_prompt
 	syscall
-	
 	li, $v0, 12
 	syscall 
-	
 	beq $v0, 89 , start_temp	#continue if Y or y
 	beq $v0, 121, start_temp
 	beq $v0, 78 , exit 		#exit if user enters n or N
 	beq $v0, 110, exit
-	
 	li $v0, 4 
 	la $a0, invalid_choice_message
 	syscall
@@ -281,33 +257,27 @@ start_temp:	#reset some things before restarting the game
 reset_counter:
 	add $t0, $zero, $zero
 	sw $t0, counter
-	
 	li $v0, 4
 	la $a0, new_game_message
 	syscall
-	
 	lb $t0, space
 	sb $t0, current_piece 
 reset_board:
 	lw $t0, count
 	move $a0, $t0
-	
 	jal calculate
 	jal set_move
-	
 	lw $t0, count
 	addi $t0, $t0, 1
 	sw $t0, count
 	li $t2, 10
-	
 	beq $t0, $t2, reset_count
 	j reset_board 
 reset_count:
 	lw $t0, count
 	add $t0, $zero, $zero
 	sw $t0, count
-	j start	
-		
+	j start		
 draw:	
 	li $v0, 4
 	la $a0, draw_message

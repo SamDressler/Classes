@@ -28,8 +28,7 @@ p1_piece: 		.byte '*'
 p2_piece: 		.byte '*'
 current_piece: 		.byte '*'
 board_counter: 		.byte 1
-next_move:		.word 0
-#next_move: 		.byte 1
+next_move: 		.byte 1
 board: 			.ascii   "\n\n        | |        1|2|3\n       -----       -----"
 		        .ascii     "\n       X|X|        4|5|6\n       -----       -----"
 		        .asciiz    "\n        | |        7|8|9\n"   
@@ -69,7 +68,10 @@ start:
         li    $v0, 12
         syscall
         move  $s0, $v0        
-        
+        li $v0, 11
+        move $a0, $s0
+        syscall
+
          li  $t0, 63           # Load $t0 with the offset.
         li  $t1, 'X'              # Load $t1 with the marker 'X'.
         sb  $t1, board($t0)       # Store the marker to the location, board+offset.
@@ -82,7 +84,10 @@ start:
 	mul   $s0, $s0, 8        		
 	add   $s0, $s0, 2
 	
-	lb    $t3, comb($s0)   # $t0 = '4'
+	#lb    $t3, comb($s0)   # $t0 = '4'
+	li $v0, 12
+	syscall
+	move $t3, $v0
 	sub   $a0, $t3, '0'    # $a0 = 4
 	move  $v0, $a0
 	mul   $a0, $a0, 2
@@ -98,9 +103,9 @@ start:
 	lb    $a0, board($s1)
         bne   $a0, 'X', L2
         
-        add   $s0, $s0, 1
-	lb    $s0, comb($s0)   # $t0 = '5'
-	sub   $a0, $s0, '0'    # $a0 = 5
+        add   $s0, $s0, 1	#increment $s0 so that we get the next element in the combination
+	lb    $s0, comb($s0)   # $t0 = '5'	#load the next combination
+	sub   $a0, $s0, '0'    # $a0 = 5	#convert that position to numerical from ascii
 	move  $v0, $a0
 	mul   $a0, $a0, 2
 	add   $a0, $a0, 7
