@@ -41,16 +41,7 @@ comb: .ascii  "235947  "      # move 1
          .ascii  "143589  "      # move 7
          .ascii  "2579    "      # move 8
          .ascii  "153678  "      # move 9
-         
-         h_combos:		.ascii  "1 2 3"
-			.ascii  "4 5 6"
-			.asciiz "7 8 9"
-v_combos:		.ascii  "1 2 4"
-			.ascii  "2 5 8"
-			.asciiz "3 6 9"			
-d_combos:		.ascii  "1 5 9"
-			.asciiz "3 5 7"
-			
+
 p1:    .asciiz  "Enter the next move: "
 p2:    .asciiz  "O wins"
 			
