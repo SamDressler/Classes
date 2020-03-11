@@ -5,20 +5,16 @@ package api;
 
 import java.io.Serializable;
 
-/**
- * @author david apostal
- *
- */
 public abstract class Worker implements Serializable {
 	private static final long serialVersionUID = -1697662415894139584L;
-	private int taskId;
-	private String taskName;
-	
+	private final int taskId;
+	private final String taskName;
+
 	/**
 	 * @param the task id for the work task
 	 * @param the name of this task
 	 */
-	public Worker(int id, String name) {
+	public Worker(final int id, final String name) {
 		taskId = id;
 		taskName = name;
 	}
