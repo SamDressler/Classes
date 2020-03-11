@@ -1,4 +1,3 @@
-#Sam DresslerMae
 CC = gcc
 CFLAGS = -c -Wall
 #          Main              Scan               Load              Search          Free
