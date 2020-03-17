@@ -18,9 +18,13 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
      *  Requires this
      */
     private static final long serialVersionUID = 1L;
+    
     private final String[] tasks = { "SortWorker", "SumReducer", "PrimeChecker", "FractionReducer" };
     private final HashMap<String, Integer> usersMap = new HashMap<String, Integer>();
-    
+
+    public RemoteObject() throws RemoteException{
+
+    }
     /**
      * Registers a client with the volunteer computing server.
      * 
@@ -45,9 +49,9 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
      * @return a Worker object that can perform
      * @throws RemoteException if userId is unknown or if taskName does not exist.
      */
-    public Worker requestWork(final String userId, final String taskName) throws RemoteException {
-        
-      
+    public Worker requestWork(final String userId, final String taskName) throws RemoteException 
+    {    
+        return new SortWorker<Integer>(1,2,69); 
     }
 
     /**
