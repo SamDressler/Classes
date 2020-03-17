@@ -1,4 +1,5 @@
 /**
+ * Sam Dressler
  * Worker.java
  */
 package api;

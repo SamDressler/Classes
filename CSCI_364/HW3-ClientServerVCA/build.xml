@@ -40,7 +40,7 @@
             fork="true" 
             failonerror="yes"
             classpath="${build.dir}" 
-            classname="hw1.ThreadedMM">
+            classname="hw3">
             <arg line="4444 10"/>
         </java>
     </target>

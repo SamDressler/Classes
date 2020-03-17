@@ -11,7 +11,7 @@ import java.util.List;
 import api.Worker;
 
 /**
- * @author david
+ * @author Sam Dressler
  *
  */
 class SortWorker<T extends Comparable<? super T>> extends Worker {

@@ -1,3 +1,4 @@
+//Sam Dressler
 /**
  * ClientManager.java
  */
@@ -8,9 +9,9 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 /**
- * @author david apostal
+ * @author Sam Dressler
  *
- */
+ */ 
 public interface ClientManager extends Remote {
 	/**
 	 * The String that identifies the remote object.
