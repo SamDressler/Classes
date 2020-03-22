@@ -1,3 +1,4 @@
 grant codeBase "file:build" {
     permission java.security.AllPermission;
 };
+
