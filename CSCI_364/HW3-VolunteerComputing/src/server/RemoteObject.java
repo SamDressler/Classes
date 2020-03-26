@@ -4,13 +4,14 @@ package server;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
 import api.Worker;
 import api.ClientManager;
-import java.rmi.Remote;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.LinkedList;
 
 public class RemoteObject extends UnicastRemoteObject implements ClientManager
 {
@@ -22,6 +23,10 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
     private final String[] tasks = { "SortWorker", "SumReducer", "PrimeChecker", "FractionReducer" };
     private final HashMap<String, Integer> usersMap = new HashMap<String, Integer>();
 
+    public HashMap<String,Integer> getUsers()
+    {
+        return usersMap;
+    }
     public RemoteObject() throws RemoteException{
 
     }
@@ -51,6 +56,8 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
      */
     public Worker requestWork(final String userId, final String taskName) throws RemoteException 
     {    
+        //
+        
         return new SortWorker<Integer>(1,2,69); 
     }
 
@@ -75,7 +82,7 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
      */
     public float getScore(final String userId) throws RemoteException
     {
-        return 1.0f;
+            return usersMap.get(userId);
     }
 
 }

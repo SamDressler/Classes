@@ -33,7 +33,9 @@ class SortWorker<T extends Comparable<? super T>> extends Worker {
 	 */
 	@Override
 	public void doWork() {
+		System.out.println("Unsorted List:  "+list.toArray().toString());
 		Collections.sort(list);
+		System.out.println("Sorted List:  "+list.toArray().toString());
 	}
 		
 	/**

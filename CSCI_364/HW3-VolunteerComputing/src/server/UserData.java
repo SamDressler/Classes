@@ -25,4 +25,9 @@ public class UserData
     {
         this.score = 0;
     }
+    public String getUserID()
+    {
+        return this.id;
+    }
+    
 }
