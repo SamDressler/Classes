@@ -17,15 +17,16 @@ import api.Worker;
 class SortWorker<T extends Comparable<? super T>> extends Worker {
 	private static final long serialVersionUID = -4051898108461870504L;
 	private List<T> list = new ArrayList<T>();
-	
+	private List<T> inputList = new ArrayList<T>();
 	/**
 	 * @param id 
 	 * @param arr an array of items to be sorted 
 	 */
 	@SafeVarargs
-	SortWorker(int id, T ...arr) {
-		super(id, "SortWorker");
+	SortWorker(int task_id, T ...arr) {
+		super(task_id, "SortWorker");
 		list.addAll(Arrays.asList(arr));
+		inputList.addAll(Arrays.asList(arr));
 	}
 
 	/* (non-Javadoc)
@@ -33,25 +34,33 @@ class SortWorker<T extends Comparable<? super T>> extends Worker {
 	 */
 	@Override
 	public void doWork() {
-		System.out.println("Unsorted List:  "+list.toArray().toString());
+		//System.out.println("Input: " +list);
 		Collections.sort(list);
-		System.out.println("Sorted List:  "+list.toArray().toString());
+		//System.out.println("Output: "+list);
 	}
 		
 	/**
 	 * 
-	 * @return 
+	 * @return returns the Sorted list
 	 */
-	List<T> getList() {
+	public List<T> getList() {
 		return list;
 	}
+	/**
+	 * Returns
+	 * @return Returns the unsorted list
+	 */
+	public List<T> getInputList(){
+		return inputList;
+	}
+
 
 	/**
 	 * Test harness
 	 * @param args There are no arguments.
 	 */
 	public static void main(String[] args) {
-		SortWorker<String> sw1 = new SortWorker<String>(1, "cat", "mouse", "dog");
+		SortWorker<String> sw1 = new SortWorker<String>(1, "mouse", "cat", "dog");
 		sw1.doWork();
 		System.out.println(sw1.list);
 		

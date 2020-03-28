@@ -1,19 +1,19 @@
 //Sam Dressler
-//HW 3 Client
+//Client.java
 package client;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.Naming;
 import java.util.List;
 import java.util.Random;
 import java.util.LinkedList;
-import java.util.HashMap;
 import java.util.Scanner;
 
 import api.ClientManager;
 import api.Worker;
-
+/**
+ * @author Sam Dressler
+ */
 public class Client
 {
     //Variables
@@ -23,7 +23,6 @@ public class Client
     private static final int tasks_required = 5;
     private static int tasks_completed = 0;
     private static List<String> tasks = new LinkedList<String>();
-    private static HashMap <String,Integer> users = new HashMap<>();
     public static void main(final String args[]) 
     {
         if (System.getSecurityManager() == null) {
@@ -32,69 +31,98 @@ public class Client
         //Variables
         Scanner sc = new Scanner(System.in);
         int mode = 0;
-        String taskID = null;
+        String taskName = null;
         
         //Check the user arguments
         read_args(args);
     
-        System.out.println("Client Started:");
+        final String url = "rmi://" + rmi_host +":"+ rmi_port +"/"+ ClientManager.REMOTE_OBJECT;
         try {
-
-            final String url = "rmi://" + rmi_host + ClientManager.REMOTE_OBJECT;
-
             ClientManager cm = (ClientManager)Naming.lookup(url);
             //Register once
             tasks = cm.register(user_id);
-            //Print Possible Tasks
-            System.out.print("Possible Tasks: ");
+
+            System.out.println("Client Started:");
+            //Print Possible Tasks 
+            System.out.println("=========================");
+            System.out.println("Possible Tasks: ");
             for(int i = 0; i <tasks.size(); i ++){
-                System.out.print(tasks.get(i)+", ");
+                System.out.print(tasks.get(i)+"\n");
             }
+            System.out.println("=========================");
+
             //NOTE: This was not part of the requirements but was added to make testing easier
 
-            //Request and do work 5 times
-            System.out.println("\nComplete 5 tasks...");            
+            //Request and do work 5 times          
             mode = programMode(sc);
             switch(mode){
+               //Randomly Choose and execute 5 tasks
                 case 1:
-                    //I think this is the mode that the assignment wants
-                    //Randomly choosing and executing 5 tasks
-                    int task = 0;
+                    System.out.println("Randomly choosing and executing tasks: ");
+                    System.out.println("-------------------------------------");
+                    String uid = getUserID();
                     Random rand = new Random();
-                    task = rand.nextInt(4);
+                    
                     while(tasks_completed < tasks_required)
                     {
+                        int rand_task = rand.nextInt(4);
+                        taskName = tasks.get(rand_task);
+                        try
+                        {
+                            Worker worker = cm.requestWork(uid, taskName);
+                            System.out.println("---Task ID: "+(worker.getTaskId()+1));
+                            System.out.println("---Task being completed: "+ worker.getTaskName());
+                            worker.doWork();
+                            cm.submitResults(uid, worker);
+                            System.out.println("---"+user_id+"'s Current Total Score: "+ cm.getScore(user_id));
+                            System.out.println("-------------------------------------");
+                            tasks_completed++;
+                        }
+                        catch(RemoteException e)
+                        {
+                            e.printStackTrace();
+                            break;
+                        }
 
                     }
                     break;
 
                 case 2:
                     //the mode I added (╯°□°）╯︵ ┻━┻
-                    String taskName = null;
-                    String uid = getUserID();
+                    uid = getUserID();
                     while(tasks_completed < tasks_required)
                     {
+                        System.out.println("=============================");
+                        System.out.println("Tasks Remaining In Session: "+(tasks_required-tasks_completed));
+                        System.out.println("=============================");
                         taskName = chooseWork(sc);
                         try{
                             Worker worker = cm.requestWork(uid, taskName);
+                            System.out.println("---Task ID: "+(worker.getTaskId()+1));
+                            System.out.println("---Task being completed: "+ worker.getTaskName());
                             worker.doWork();
                             cm.submitResults(uid, worker);
-            
+                            tasks_completed++;
                         }
                         catch(RemoteException e){
                             e.printStackTrace();
+                            break;
                         }
+                        System.out.println("---"+user_id+"'s Current Total Score: "+ cm.getScore(user_id));
+                        System.out.println("-------------------------------------");
                     }
                     break;
                 default:
                     System.out.println("Error: Invalid Mode");
                     System.exit(0);
             }
-        } catch (final Exception e) {
+        }
+         catch (final Exception e) 
+         {
+            e.getMessage();
             e.printStackTrace();
         }
-        //users = ro.getUsers();
-       // System.out.println("Final Score"+ users.get(user_id));
+
         System.exit(0);
     }
 
@@ -110,13 +138,13 @@ public class Client
         int choice = 0;
         int mode = 0;
         boolean bool = true;
-        sc = new Scanner(System.in);
-        System.out.println("Choose the Execution Type:");
-        System.out.println("1. Randomly choose tasks");
-        System.out.println("2. Select Each task\nChoice: ");
-        choice = sc.nextInt();
+
         while(bool)
-        {
+        {        
+            System.out.println("Choose Method to Complete 5 tasks");
+            System.out.println("1. Randomly choose tasks");
+            System.out.println("2. Explicitly Select Each task\nChoice: ");
+            choice = sc.nextInt();
             switch(choice)
             {
                 case 1:
@@ -133,7 +161,6 @@ public class Client
                     break;
            }
         }
-        sc.close();
         return mode;
     }
     
@@ -145,32 +172,39 @@ public class Client
     {
         String task = null;
         int choice = 0;
-        sc = new Scanner(System.in);
-        System.out.println("Choose a task to complete:");
-        System.out.println("1. Sort a sequence of values");
-        System.out.println("2. Sum a sequence of numerical values(int, float, or double)");
-        System.out.println("3. Test if an integer is prime");
-        System.out.println("4. Reduce a fraction\nChoice: ");
-        choice = sc.nextInt();
-        switch(choice)
+        boolean bool = true;
+        while(bool)
         {
-            case 1:
-                task = "SortWorker";
-                break;
-            case 2:
-                task = "SumReducer";
-                break;
-            case 3:
-                task = "PrimeChecker";
-                break;
-            case 4:
-                task = "FractionReducer";
-                break;
-            default:
-                System.out.println("Invalid Choice");
-                task = "bad";
+            System.out.println("Choose a task to complete:");
+            System.out.println("1. Sort a sequence of values");
+            System.out.println("2. Sum a sequence of numerical values");
+            System.out.println("3. Test if an integer is prime");
+            System.out.println("4. Reduce a fraction\nChoice: ");
+            choice = sc.nextInt();
+            switch(choice)
+            {
+                case 1:
+                    task = "SortWorker";
+                    bool = false;
+                    break;
+                case 2:
+                    task = "SumReducer";
+                    bool = false;
+                    break;
+                case 3:
+                    task = "PrimeChecker";
+                    bool = false;
+                    break;
+                case 4:
+                    task = "FractionReducer";
+                    bool = false;
+                    break;
+                default:
+                    System.out.println("Invalid Choice");
+                    bool = true;
+                    break;
+           }
         }
-        sc.close();
         return task;
     }
     /*

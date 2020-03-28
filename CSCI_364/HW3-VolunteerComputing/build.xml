@@ -32,7 +32,29 @@
                includeAntRuntime="false"
                debug="on" />
     </target>
-
+    <target name="run-server" 
+        description="run the server" 
+        depends="compile">
+        <java 
+            fork="true" 
+            failonerror="yes"
+            classpath="${build.dir}" 
+            classname="server.Server">
+            <jvmarg value="-Djava.security.policy=app.policy"/>
+        </java>
+    </target>
+        <target name="run-client" 
+        description="run the client" 
+        depends="compile">
+        <java 
+            fork="true" 
+            failonerror="yes"
+            classpath="${build.dir}" 
+            classname="client.Client">
+            <jvmarg value="-Djava.security.policy=app.policy"/>
+            <arg line="1"/>
+        </java>
+    </target>
     <target name="run-solver" 
     	description="run the solver" 
     	depends="compile">

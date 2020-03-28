@@ -16,10 +16,11 @@ public class Server
         //read in the args
         read_args(args);
         try{
-            String url = "//" + rmi_host + ":" + rmi_port + "/" + ClientManager.REMOTE_OBJECT;
+            String url = "rmi://" + rmi_host + ":" + rmi_port + "/" + ClientManager.REMOTE_OBJECT;
             System.out.println(url);
             Naming.bind(url, new RemoteObject());
             System.out.println("Server is ready!");
+            System.out.println("--------------------------------");
         }
         catch(Exception e){
             e.printStackTrace();
