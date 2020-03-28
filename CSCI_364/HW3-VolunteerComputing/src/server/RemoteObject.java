@@ -42,20 +42,21 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
      */
     public List<String> register(final String userID) throws RemoteException 
     {
-        //final UserData userData = new UserData(userID);
         //register the userID with an initial score of 0 if the map doesn't already 
         //contain the user.
         if(!usersMap.containsKey(userID)){
             usersMap.put(userID, 0);
             System.out.println("Registered new user: "+userID);
-            System.out.println("----------------------------------");
         }
         else
         {
-            System.out.println("User: "+userID+" has returned");
-            System.out.println("----------------------------------");
+            System.out.println("-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-");
+            System.out.println(userID+" has returned!");
         }
 
+        System.out.println("All Users: "+usersMap.keySet().toString());
+        System.out.println("All Scores: "+usersMap.values().toString());
+        System.out.println("-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-");
         //returns the list of tasks to the client
         return Arrays.asList(tasks);
         
@@ -123,8 +124,8 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
                 break;
 
             case "FractionReducer":
-                int numerator = 81;
-                int denominator = 153;
+                int numerator = rand.nextInt(1000);
+                int denominator = rand.nextInt(1000);
                 worker = new FractionReducer(genTaskId(),numerator,denominator);
                 break;
 
@@ -157,36 +158,36 @@ public class RemoteObject extends UnicastRemoteObject implements ClientManager
                 case "SortWorker":
                     @SuppressWarnings("unchecked")
                     SortWorker<? extends Number> sortWorker = (SortWorker<? extends Number>) answer;
-                    System.out.println("Input : "+ sortWorker.getInputList());
-                    System.out.println("Sorted Output: "+sortWorker.getList());
-                    System.out.println("----------------------------------");
+                    System.out.println("|-Input-Unsorted: "+ sortWorker.getInputList());
+                    System.out.println("|-Output-Sorted: "+sortWorker.getList());
+                    System.out.println("");
                     break;
                 case "SumReducer":
                     @SuppressWarnings("unchecked")
                     SumReducer<Double> sumWorker = (SumReducer<Double>) answer;
-                    System.out.println("Total from "+ num_sr_params+" "+sumWorkerType+"s is: "+sumWorker.getTotal());
-                    System.out.println("----------------------------------");
+                    System.out.println("|-Total from "+ num_sr_params+" "+sumWorkerType+"s is: "+sumWorker.getTotal());
+                    System.out.println("");
                     break;
 
                 case "PrimeChecker":
 
                     PrimeChecker primeWorker = (PrimeChecker) answer;
                     if(primeWorker.isNumPrime()){
-                        System.out.println(primeWorker.getNum()+" is a prime integer!");
-                        System.out.println("----------------------------------");
+                        System.out.println("|-Integer with value: "+primeWorker.getNum()+" is prime!");
+                        System.out.println("");
                     }
                     else{
-                        System.out.println(primeWorker.getNum()+" is not a prime integer!");
-                        System.out.println("----------------------------------");
+                        System.out.println("|-Integer with value: "+primeWorker.getNum()+" is not prime!");
+                        System.out.println("");
                     }
                     break;
  
                 case "FractionReducer":
                     FractionReducer fractionWorker = (FractionReducer) answer;
-                    System.out.println("Input Fraction: "+fractionWorker.getNumerator()+"/"+fractionWorker.getDenominator());
-                    System.out.println("Greatest Common Denominator: "+fractionWorker.getGCD());
-                    System.out.println("Output Fraction: "+fractionWorker.getNewNumerator()+"/"+fractionWorker.getNewDenominator());
-                    System.out.println("----------------------------------");
+                    System.out.println("|-Input Fraction: "+fractionWorker.getNumerator()+"/"+fractionWorker.getDenominator());
+                    System.out.println("|-Greatest Common Denominator: "+fractionWorker.getGCD());
+                    System.out.println("|-Output Fraction: "+fractionWorker.getNewNumerator()+"/"+fractionWorker.getNewDenominator());
+                    System.out.println("");
                     break;
  
              default:

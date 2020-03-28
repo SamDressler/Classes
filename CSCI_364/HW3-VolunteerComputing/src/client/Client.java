@@ -65,6 +65,7 @@ public class Client
                     
                     while(tasks_completed < tasks_required)
                     {
+                        System.out.println("----------------------------------");
                         int rand_task = rand.nextInt(4);
                         taskName = tasks.get(rand_task);
                         try
@@ -75,7 +76,7 @@ public class Client
                             worker.doWork();
                             cm.submitResults(uid, worker);
                             System.out.println("---"+user_id+"'s Current Total Score: "+ cm.getScore(user_id));
-                            System.out.println("-------------------------------------");
+                            System.out.println("----------------------------------");
                             tasks_completed++;
                         }
                         catch(RemoteException e)
@@ -111,6 +112,7 @@ public class Client
                         System.out.println("---"+user_id+"'s Current Total Score: "+ cm.getScore(user_id));
                         System.out.println("-------------------------------------");
                     }
+                    System.out.println("----------------------------------");
                     break;
                 default:
                     System.out.println("Error: Invalid Mode");

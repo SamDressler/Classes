@@ -57,10 +57,6 @@ public class PrimeChecker extends Worker{
         }
         else{
             isPrime = true;
-        }if(isPrime){
-            System.out.println(number+" is Prime!");
-        }else{
-            System.out.println(number+" is not Prime!");
         }
     }
     public boolean isNumPrime(){

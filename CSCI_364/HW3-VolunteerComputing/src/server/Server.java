@@ -20,7 +20,7 @@ public class Server
             System.out.println(url);
             Naming.bind(url, new RemoteObject());
             System.out.println("Server is ready!");
-            System.out.println("--------------------------------");
+            System.out.println("-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-/-");
         }
         catch(Exception e){
             e.printStackTrace();

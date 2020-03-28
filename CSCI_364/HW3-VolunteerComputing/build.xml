@@ -52,7 +52,7 @@
             classpath="${build.dir}" 
             classname="client.Client">
             <jvmarg value="-Djava.security.policy=app.policy"/>
-            <arg line="1"/>
+            <arg line="Sam"/>
         </java>
     </target>
     <target name="run-solver" 
