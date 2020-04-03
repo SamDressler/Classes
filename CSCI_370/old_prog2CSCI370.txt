@@ -1,0 +1,140 @@
+sys_look_ahead:
+	lb $s0, current_piece
+	lw $t0, sys_prev_move
+	
+	li $t1, 5
+	sub $t1, $t1, 1
+	mul $t1, $t1, 4
+	lw $t2, offset_list($t1)
+	lb $t3, board($t2)
+	#bne
+	bne $t0, 5, chooseCenter
+	
+chooseCenter:
+	li $t1, 5
+	sub $t1, $t1, 1
+	mul $t1, $t1, 4
+	lw $t2, offset_list($t1)
+	sb $s0, board($t2)
+	
+check_sys_win:
+	sw $zero, loop_counter
+	lb $s0, current_piece	#store the current piece in s0
+	lw $s1, sys_prev_move	#store the move in s1
+	move $t0, $s1
+	sub $t0, $t0, 1				#subtract 1 from the next move to get index
+	mul $t0, $t0, 4				#multiply by 4 to get onto the correct word boundry
+	lw $s2, num_combs($t0)			#get the number of possible wins and store in s2
+	sw $s2, possible_wins
+	#initialize the comb_offset_counter
+	lw $t0, sys_prev_move			#find offset for the starting combination index i.e. 1 -> 1-0 = 0*8 = &0 => 2
+	sub $t0, $t0, 1
+	mul $t0, $t0, 8				#store the first index of the comb in t0 i.e. 1-> 0 is the first index
+	sw $t0, comb_offset_counter		#store the offset in the comb array in the counter variable
+loop3_start:					#check for win until possible wins for that move are depleated
+	lw $t0, loop_counter
+	lw $t1, possible_wins
+	beq $t0, $t1, sys_turn_complete		#check if the current iteration is less than the possible number of wins
+	addi $t0, $t0, 1
+	sw $t0, loop_counter			#incremet the loop counter once after checking if its less than the number of wins
+	
+	lw $t0, comb_offset_counter
+	lb $t1, comb($t0)			#store the value of that index in t1 i.e. 1->  2 is the first spot to check 
+	
+	sub $t1, $t1, '1'			#convert the byte to integer
+	mul $t1, $t1, 4				#multiply by 4 to get the location in the offset array
+	sw $t1, offset_counter			#store that position in the offset counter variable
+	
+	lw $a0, offset_list($t1)		#check what piece is at the offset counter i.e. for move 1-> this checks what piece is at 2 or offset 11
+	lb $t2, board($a0)			#check the piece is in the board at that offset
+	beq $s0, $t2, one_off_check_2		#if the pieces are the same jump to one_off win function
+	lw $t0, comb_offset_counter		#if not the same, increment the comb counter by 2
+	addi $t0, $t0, 2		
+	sw $t0, comb_offset_counter		#increment the comb_offset_counter
+	j loop3_start				#restart the loop
+one_off_check_2:
+	lw $t0, comb_offset_counter		#load where we were in the comb array
+	addi, $t0, $t0, 1			#increment that location by 1
+	sw $t0, comb_offset_counter		#store it for later use
+	
+	lb $t1, comb($t0)			#use the index in the comb array to find what the next place is we need to check
+	sub $t1, $t1, '1'			#subtract 1 to turn the hex to decimal, i.e. 1->3 3-1 = 2,
+	mul $t1, $t1, 4				#mult by 4 to get location in offset array
+	
+	lw $t2, offset_list($t1)		#get the offset at the index calculated in previous line
+	lb $t3, board($t2)			#get the piece at that offset
+	beq $s0, ' ', 	place_sys_win		#check if the current piece stored in $s0 and the piece at the offset are the same
+	
+	lw $t0, comb_offset_counter		#load comb_offset_counter to increment
+	addi $t0, $t0, 1			#if not the same, increment the comb_offset_counter by 1 
+	sw $t0, comb_offset_counter		#increment the comb_offset_counter
+	
+	j loop3_start				#restart the loop
+place_sys_win:
+	lb $s0, system_piece
+	sb $s0, board($t2)
+	j system_wins
+###
+#System Function to see if they need to block after checking if they can win anywhere	
+#Check_user_win: Function checks if the user can win after playing its previous move and then blocks it if it exists
+#This function has to check if the move they placed to block the user results in a win
+check_user_win:
+	sw $zero, loop_counter
+	lb $s0, user_piece
+	lw $s1, user_prev_move
+	move $t0, $s1
+	sub $t0, $t0, 1
+	mul $t0, $t0, 4
+	lw $s2, num_combs($t0)
+	sw $s2, possible_wins
+	lw $t0, user_prev_move
+	sub $t0,$t0,1
+	mul $t0,$t0,8
+	sw $t0, comb_offset_counter
+loop2_start:
+	lw $t0, loop_counter
+	lw $t1, possible_wins
+	beq $t0, $t1, cant_block
+	addi $t0, $t0, 1
+	sw $t0, loop_counter
+	
+	lw $t0, comb_offset_counter
+	lb $t1, comb($t0)
+	
+	sub $t1, $t1, '1'			#convert the byte to integer
+	mul $t1, $t1, 4				#multiply by 4 to get the location in the offset array
+	sw $t1, offset_counter			#store that position in the offset counter variable
+	
+	lw $a0, offset_list($t1)		#check what piece is at the offset counter i.e. for move 1-> this checks what piece is at 2 or offset 11
+	lb $t2, board($a0)			#check the piece is in the board at that offset
+	beq $s0, $t2, one_off_check		#if the pieces are the same jump to one_off win function
+	lw $t0, comb_offset_counter		#if not the same, increment the comb counter by 2
+	addi $t0, $t0, 2		
+	sw $t0, comb_offset_counter		#increment the comb_offset_counter
+	j loop2_start				#restart the loop
+one_off_check:
+	lw $t0, comb_offset_counter		#load where we were in the comb array
+	addi, $t0, $t0, 1			#increment that location by 1
+	sw $t0, comb_offset_counter		#store it for later use
+	
+	lb $t1, comb($t0)			#use the index in the comb array to find what the next place is we need to check
+	sw $t1, temp
+	sub $t1, $t1, '1'			#subtract 1 to turn the hex to decimal, i.e. 1->3 3-1 = 2,
+	mul $t1, $t1, 4				#mult by 4 to get location in offset array
+	
+	lw $t2, offset_list($t1)		#get the offset at the index calculated in previous line
+	lb $t3, board($t2)			#get the piece at that offset
+	beq $t3, ' ',block_move
+	#beq $s0, $t3, block_move		#check if the user piece stored in $s0 and the piece at the offset are the same, if it is jump to block
+	
+	lw $t0, comb_offset_counter		#load comb_offset_counter to increment
+	addi $t0, $t0, 1			#if not the same, increment the comb_offset_counter by 1 
+	sw $t0, comb_offset_counter		#increment the comb_offset_counter
+	
+	j loop2_start				#restart the loop
+block_move:
+	lw $t9, temp
+	sw $t9, sys_prev_move
+	lb $s0, system_piece
+	sb $s0, board($t2)
+	j sys_turn_complete

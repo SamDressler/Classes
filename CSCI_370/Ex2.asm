@@ -32,7 +32,7 @@ next_move: 		.byte 1
 board: 			.ascii   "\n\n        | |        1|2|3\n       -----       -----"
 		        .ascii     "\n       X|X|        4|5|6\n       -----       -----"
 		        .asciiz    "\n        | |        7|8|9\n"   
-comb: .ascii  "235947  "      # move 1
+comb: 	 .ascii  "235947  "      # move 1
          .ascii  "1358    "      # move 2
          .ascii  "125769  "      # move 3
          .ascii  "1756    "      # move 4
@@ -57,9 +57,9 @@ start:
         syscall
         
         li    $v0, 12
-        syscall
+        syscall			#get move and store in s0
         move  $s0, $v0        
-        li $v0, 11
+        li $v0, 11		#print move
         move $a0, $s0
         syscall
 
@@ -67,15 +67,17 @@ start:
         li  $t1, 'X'              # Load $t1 with the marker 'X'.
         sb  $t1, board($t0)       # Store the marker to the location, board+offset.
         
-	la    $a0, board
+	la    $a0, board	#print board with new move
 	li    $v0, 4
 	syscall
 	
-	sub   $s0, $s0, '1'
+	sub   $s0, $s0, '1'	
 	mul   $s0, $s0, 8        		
 	add   $s0, $s0, 2
-	
-	#lb    $t3, comb($s0)   # $t0 = '4'
+	move $a0, $s0
+	li $v0, 1
+	syscall
+	lb    $t3, comb($s0)   # $t0 = '4'
 	li $v0, 12
 	syscall
 	move $t3, $v0
