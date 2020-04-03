@@ -1,3 +1,6 @@
+#Sam Dressler CSCI 370
+#PVE Tick-Tack-Toe Game. 
+#System AI implemented using 1 move look ahead to find best move
 .data
 #game messages
 startup_prompt:	      	.ascii "\n/-----------------Welcome!----------------\\\n"
@@ -15,7 +18,7 @@ user_X_prompt:	  .asciiz "\nThe user will be playing as : 'X'"
 user_O_prompt:	  .asciiz "\nThe user will be playing as : 'O'"
 user_choose_piece_prompt: .asciiz "\nPlayer, choose your piece: (x/o):  "
 get_move_prompt: 	.asciiz "\nPlayer, enter your next move (1-9): " 
-draw_message:		.asciiz "\n----------------\nThe game is a draw!\n----------------\n"
+draw_message:		.asciiz "\n--------------------\nThe game is a draw!\n--------------------\n"
 user_win_prompt:		.asciiz "\nThe User Wins!!!"
 system_win_prompt:		.asciiz "\nThe System Wins!"
 invalid_choice_message:	  .asciiz "\n---Invalid choice, try again---\n"
@@ -148,12 +151,62 @@ sys_determine_move:
 	#4th take random_move
 	j check_if_sys_can_win		#function checks if the system is one off anywhere and then chooses the move that will cause the sys to win
 cant_win_in_one:
-	#j check_user_win
+	j check_user_win
 cant_block:
 	jal sys_look_ahead
 
 no_optimal_choice:
 	j random_move #function returns to sys_turn_complete once move is chosen
+#########################################################
+#CHECK USER WIN - check if the user can win and block him if he can
+check_user_win:
+	sw $zero, loop_counter
+	lw $s1, user_prev_move
+	sub $t0, $s1, 1
+	mul $t1, $t0, 4
+	lw $t2, num_combs($t1)
+	sw $t2, possible_wins
+	mul $t3, $t0, 8
+	sw $t3, comb_offset_counter
+	lw $s2, possible_wins
+	lw $s3, loop_counter
+	lb $s4, user_piece
+	
+	check_block_loop:
+		beq $s2, $s3, cant_block#if we've gone through the loop the possible_wins number of times, check the combs in revers to make sure we can't win
+		addi $s3, $s3, 1		#increment the counter
+		sw $s3, loop_counter		#store the new counter value
+		
+		lw $t0, comb_offset_counter	#load the offset counter
+		lb $t1, comb($t0)		#get the board position indicated 
+		sub $t1, $t1, '1'			#convert the byte to integer
+		mul $t1, $t1, 4				#multiply by 4 to get the location in the offset array
+		lw $t2, offset_list($t1)		#get the offset for that position
+		lb $t3, board($t2)			#check the board at that offset
+		beq $t3, $s4, user_one_off		#check if the piece in the board and the system are the same
+		addi $t0, $t0, 2			#else add two to the comb_offset_counter and loop to the beginning
+		sw $t0, comb_offset_counter
+		j check_block_loop
+	user_one_off:
+		#user is one off, need to check and block
+		lw $t0, comb_offset_counter	#load the index
+		addi $t0, $t0, 1		#increment the index to get the last spot before we can win
+		lb $t1, comb($t0)		#load whatever byte is at that position
+		sub $t1, $t1, '1' 		#convert it from byte to integer
+		mul $t2, $t1, 4			#multiply by 4 to get index in offset array
+		lw $t3, offset_list($t2)	#load the offset from the list for the index specified
+
+		lb $t4, board($t3)		#load the piece at that offset
+		beq $t4, ' ', block
+		addi $t0, $t0, 1		#if the space is not empty, increment counter and check next sequence
+		sw $t0, comb_offset_counter	#store the counter
+		j check_block_loop		#jump to the beginning loop
+
+	block:
+		sw $t3, offset			#store the offset for use in the take_move function
+		move $s1, $t1			#store the new move in $s1 so that it is used correctly in takemove
+		j take_move		#if the space is empty, take the move
+
 ##########################################################
 #CHECK IF SYS CAN WIN - function that will check if the system is one off anywhere and will choose that move
 check_if_sys_can_win:	
@@ -166,13 +219,11 @@ check_if_sys_can_win:
 	sw $t2, possible_wins		#store the number of wins in possible_wins variable
 	mul $t3,$t0, 8 			#multiply the prev_move - 1 by 8 to get row in combination array
 	sw $t3, comb_offset_counter		#store the index used to parse the comb array the normal way
-	addi $t3, $t3, 1		
-	sw $t3, comb_offset_counter_reverse	#store the index used to parse the comb array in the reverse way
 	lw $s2, possible_wins		#load the number of wins
 	lw $s3, loop_counter		#load the loop_counter
 	lb $s4, current_piece		#load the current_piece
 	for_each_comb_loop:
-		beq $s2, $s3, reverse_check#if we've gone through the loop the possible_wins number of times, check the combs in revers to make sure we can't win
+		beq $s2, $s3, cant_win_in_one#if we've gone through the loop the possible_wins number of times, check the combs in revers to make sure we can't win
 		addi $s3, $s3, 1		#increment the counter
 		sw $s3, loop_counter		#store the new counter value
 		
@@ -185,7 +236,7 @@ check_if_sys_can_win:
 		lb $t3, board($t2)			#check the board at that offset
 		beq $t3, $s4, sys_one_off		#check if the piece in the board and the system are the same
 		addi $t0, $t0, 2			#else add two to the comb_offset_counter and loop to the beginning
-		sw $t0, com_offset_counter
+		sw $t0, comb_offset_counter
 		j for_each_comb_loop
 	sys_one_off:
 		#we are one off,
@@ -193,19 +244,20 @@ check_if_sys_can_win:
 		addi $t0, $t0, 1		#increment the index to get the last spot before we can win
 		lb $t1, comb($t0)		#load whatever byte is at that position
 		sub $t1, $t1, '1' 		#convert it from byte to integer
-		mul $t1, $t1, 4			#multiply by 4 to get index in offset array
-		lw $t2, offset_list($t1)	#load the offset from the list for the index specified
-		sw $t2, offset			#store the offset for use in the take_move function
-		lb $t3, board($t2)		#load the piece at that offset
-		beq $t3, ' ', take_move		#if the space is empty, take the move
+		mul $t2, $t1, 4			#multiply by 4 to get index in offset array
+		lw $t3, offset_list($t2)	#load the offset from the list for the index specified
+
+		lb $t4, board($t3)		#load the piece at that offset
+		beq $t4, ' ', sys_temp
 		addi $t0, $t0, 1		#if the space is not empty, increment counter and check next sequence
 		sw $t0, comb_offset_counter	#store the counter
 		j for_each_comb_loop		#jump to the beginning loop
-		
-	
-	reverse_check:
-		sw $zero, loop_counter
-		for_each_comb_reverse_loop:
+
+	sys_temp:
+		sw $t3, offset			#store the offset for use in the take_move function
+		move $s1, $t1			#store the new move in $s1 so that it is used correctly in takemove
+		j take_move		#if the space is empty, take the move
+
 ##############################################################################
 #sys_look_ahead - function that looks ahead to see where the system should go
 sys_look_ahead:
@@ -501,6 +553,11 @@ R1:  xor   $a0, $a0, $a0      # Set a seed number.
      li    $a1, 9             # random number from 1 to 9
      li    $v0, 42            # random number generator
      syscall
+     beqz $a0, add_one	      #if the random move gives us a 0, add one to it
+     j dont_add_one	      # if the random move doesn't give us a zero, don't add one to it
+add_one:
+     addi $a0, $a0, 1
+dont_add_one:
      sw    $a0, sys_prev_move	#stores random number as previous sys move from 1 to 9
      sub   $a0, $a0, 1
      mul   $a2, $a0, 4		      # Get the word allignment
@@ -705,8 +762,9 @@ new_game:
 	la $a0, invalid_choice_message
 	syscall
 	j new_game
-
 start_temp:	#reset some things before restarting the game
+	sw $zero, system_goes_first
+	sw $zero, user_goes_first
 	li $t0, 1
 	sw $t0, counter
 	li $t1, 0
@@ -739,5 +797,4 @@ exit:
 	la $a0, exit_message
 	syscall			#print exit message
 	li $v0, 10 		#tell the program it is finished.
-	syscall
-	
+	syscall	
