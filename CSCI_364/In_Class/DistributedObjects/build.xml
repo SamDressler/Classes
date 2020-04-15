@@ -20,7 +20,7 @@
     </target>
 
     <target name="compile" description="compile project source code" depends="clean, init">
-        <javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" />
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeAntRuntime="false" debug="on"/>
     </target>
     <target name="run-server" 
         description="run the server" 
